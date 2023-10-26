@@ -47,7 +47,7 @@ class Water extends Liquid{
 	}
 
 	public function getMinAdjacentSourcesToFormSource() : ?int{
-		return 2;
+		return null;
 	}
 
 	public function onEntityInside(Entity $entity) : bool{
