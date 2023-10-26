@@ -756,7 +756,6 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 				throw new PacketHandlingException("Invalid tag type " . get_debug_type($frontTextTag) . " for tag \"" . Sign::TAG_FRONT_TEXT . "\" in sign update data");
 			}
 			$textBlobTag = $frontTextTag->getTag(Sign::TAG_TEXT_BLOB);
-
 			if(!$textBlobTag instanceof StringTag){
 				throw new PacketHandlingException("Invalid tag type " . get_debug_type($textBlobTag) . " for tag \"" . Sign::TAG_TEXT_BLOB . "\" in sign update data");
 			}
