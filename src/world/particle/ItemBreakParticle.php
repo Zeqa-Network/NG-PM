@@ -30,11 +30,11 @@ use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\types\ParticleIds;
 
-class ItemBreakParticle implements Particle{
+class ItemBreakParticle extends ProtocolParticle{
 	public function __construct(private Item $item){}
 
 	public function encode(Vector3 $pos) : array{
 		[$id, $meta] = ItemTranslator::getInstance()->toNetworkId(ProtocolInfo::CURRENT_PROTOCOL, $this->item->getId(), $this->item->getMeta());
-		return [LevelEventPacket::standardParticle(ParticleIds::ITEM_BREAK, ($id << 16) | $meta, $pos)];
+		return [LevelEventPacket::standardParticle(ParticleIds::ITEM_BREAK, ($id << 16) | $meta, $pos, $this->protocolId)];
 	}
 }

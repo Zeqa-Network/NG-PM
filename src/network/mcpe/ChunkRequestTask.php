@@ -67,6 +67,7 @@ class ChunkRequestTask extends AsyncTask{
 		$this->chunk = FastChunkSerializer::serializeTerrain($chunk);
 		$this->chunkX = $chunkX;
 		$this->chunkZ = $chunkZ;
+		/** @phpstan-ignore-next-line */
 		$this->dimensionId = $dimensionId;
 		$this->tiles = ChunkSerializer::serializeTiles($chunk, $mappingProtocol);
 
