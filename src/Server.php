@@ -63,6 +63,7 @@ use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\serializer\PacketBatch;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
+use pocketmine\network\mcpe\protocol\types\CompressionAlgorithm;
 use pocketmine\network\mcpe\raklib\RakLibInterface;
 use pocketmine\network\mcpe\StandardEntityEventBroadcaster;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
@@ -1381,27 +1382,32 @@ class Server{
 	 *
 	 * @param bool|null $sync Compression on the main thread (true) or workers (false). Default is automatic (null).
 	 */
-	public function prepareBatch(PacketBatch $stream, Compressor $compressor, ?bool $sync = null, ?TimingsHandler $timings = null) : CompressBatchPromise{
+	public function prepareBatch(string $buffer, PacketSerializerContext $packetSerializerContext, Compressor $compressor, ?bool $sync = null, ?TimingsHandler $timings = null) : CompressBatchPromise|string{
 		$timings ??= Timings::$playerNetworkSendCompress;
 		try{
 			$timings->startTiming();
 
-			$buffer = $stream->getBuffer();
+			$threshold = $compressor->getCompressionThreshold();
+			$protocolId = $packetSerializerContext->getProtocolId();
+			if(($threshold === null || strlen($buffer) < $compressor->getCompressionThreshold()) && $protocolId >= ProtocolInfo::PROTOCOL_1_20_60){
+				$compressionType = CompressionAlgorithm::NONE;
+				$compressed = $buffer;
 
-			if($sync === null){
-				$threshold = $compressor->getCompressionThreshold();
-				$sync = !$this->networkCompressionAsync || $threshold === null || strlen($stream->getBuffer()) < $threshold;
-			}
-
-			$promise = new CompressBatchPromise();
-			if(!$sync && strlen($buffer) >= $this->networkCompressionAsyncThreshold){
-				$task = new CompressBatchTask($buffer, $promise, $compressor);
-				$this->asyncPool->submitTask($task);
 			}else{
-				$promise->resolve($compressor->compress($buffer));
+				$sync ??= !$this->networkCompressionAsync;
+
+				if(!$sync && strlen($buffer) >= $this->networkCompressionAsyncThreshold){
+					$promise = new CompressBatchPromise();
+					$task = new CompressBatchTask($buffer, $promise, $compressor, $protocolId);
+					$this->asyncPool->submitTask($task);
+					return $promise;
+				}
+
+				$compressionType = $compressor->getNetworkId();
+				$compressed = $compressor->compress($buffer);
 			}
 
-			return $promise;
+			return ($protocolId >= ProtocolInfo::PROTOCOL_1_20_60 ? chr($compressionType) : '') . $compressed;
 		}finally{
 			$timings->stopTiming();
 		}
