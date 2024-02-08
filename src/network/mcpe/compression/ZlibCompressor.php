@@ -31,7 +31,7 @@ use function strlen;
 use function zlib_decode;
 use function zlib_encode;
 use const ZLIB_ENCODING_RAW;
-
+use pocketmine\network\mcpe\protocol\types\CompressionAlgorithm;
 final class ZlibCompressor implements Compressor{
 	use SingletonTrait;
 
@@ -51,7 +51,9 @@ final class ZlibCompressor implements Compressor{
 		private ?int $minCompressionSize,
 		private int $maxDecompressionSize
 	){}
-
+	public function getNetworkId() : int{
+		return CompressionAlgorithm::ZLIB;
+	}
 	public function getCompressionThreshold() : ?int{
 		return $this->minCompressionSize;
 	}

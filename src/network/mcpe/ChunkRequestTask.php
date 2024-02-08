@@ -28,6 +28,7 @@ use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\convert\RuntimeBlockMapping;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\serializer\ChunkSerializer;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\utils\Binary;
@@ -46,6 +47,8 @@ class ChunkRequestTask extends AsyncTask{
 	protected $chunkX;
 	/** @var int */
 	protected $chunkZ;
+	/** @phpstan-var DimensionIds::* */
+	private int $dimensionId;
 
 	/** @var Compressor */
 	protected $compressor;
@@ -57,13 +60,14 @@ class ChunkRequestTask extends AsyncTask{
 	/**
 	 * @phpstan-param (\Closure() : void)|null $onError
 	 */
-	public function __construct(int $chunkX, int $chunkZ, Chunk $chunk, int $mappingProtocol, CachedChunkPromise $promise, Compressor $compressor, ?\Closure $onError = null){
+	public function __construct(int $chunkX, int $chunkZ, int $dimensionId, Chunk $chunk, int $mappingProtocol, CachedChunkPromise $promise, Compressor $compressor, ?\Closure $onError = null){
 		$this->compressor = $compressor;
 		$this->mappingProtocol = $mappingProtocol;
 
 		$this->chunk = FastChunkSerializer::serializeTerrain($chunk);
 		$this->chunkX = $chunkX;
 		$this->chunkZ = $chunkZ;
+		$this->dimensionId = $dimensionId;
 		$this->tiles = ChunkSerializer::serializeTiles($chunk, $mappingProtocol);
 
 		$this->storeLocal(self::TLS_KEY_PROMISE, $promise);
@@ -75,10 +79,12 @@ class ChunkRequestTask extends AsyncTask{
 
 		$cache = new CachedChunk();
 
+		$dimensionId = $this->dimensionId;
+
 		$blockMapper = RuntimeBlockMapping::getInstance();
 		$encoderContext = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary(GlobalItemTypeDictionary::getDictionaryProtocol($this->mappingProtocol)), $this->mappingProtocol);
 
-		foreach(ChunkSerializer::serializeSubChunks($chunk, $blockMapper, $encoderContext) as $subChunk){
+		foreach(ChunkSerializer::serializeSubChunks($chunk, $dimensionId, $blockMapper, $encoderContext) as $subChunk){
 			/** @phpstan-ignore-next-line */
 			$cache->addSubChunk(Binary::readLong(xxhash64($subChunk)), $subChunk);
 		}
@@ -95,9 +101,11 @@ class ChunkRequestTask extends AsyncTask{
 		$cache->compressPackets(
 			$this->chunkX,
 			$this->chunkZ,
+			$dimensionId,
 			$chunkDataEncoder->getBuffer(),
 			$this->compressor,
 			$encoderContext,
+			$this->mappingProtocol
 		);
 
 		$this->setResult($cache);
