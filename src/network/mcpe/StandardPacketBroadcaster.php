@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe;
 
 use pocketmine\event\server\DataPacketSendEvent;
+use pocketmine\network\mcpe\compression\CompressBatchPromise;
 use pocketmine\network\mcpe\protocol\serializer\PacketBatch;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
@@ -90,7 +91,15 @@ final class StandardPacketBroadcaster implements PacketBroadcaster{
 				PacketBatch::encodeRaw($stream, $packetBuffers);
 				$batchBuffer = $stream->getBuffer();
 
-				$promise = $this->server->prepareBatch($batchBuffer, $this->protocolContext, $compressor, timings: Timings::$playerNetworkSendCompressBroadcast);
+				$batch = $this->server->prepareBatch($batchBuffer, $this->protocolContext, $compressor, timings: Timings::$playerNetworkSendCompressBroadcast);
+
+				if (!$batch instanceof CompressBatchPromise) {
+					$promise = new CompressBatchPromise();
+					$promise->resolve($batch);
+				} else {
+					$promise = $batch;
+				}
+
 				foreach($compressorTargets as $target){
 					$target->queueCompressed($promise);
 				}

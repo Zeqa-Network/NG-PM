@@ -72,6 +72,7 @@ final class ChunkSerializer{
 	public static function getSubChunkCount(Chunk $chunk, int $dimensionId) : int{
 		//if the protocol world bounds ever exceed the PM supported bounds again in the future, we might need to
 		//polyfill some stuff here
+		/** @phpstan-ignore-next-line */
 		[$minSubChunkIndex, $maxSubChunkIndex] = self::getDimensionChunkBounds($dimensionId);
 		for($y = $maxSubChunkIndex, $count = $maxSubChunkIndex - $minSubChunkIndex + 1; $y >= $minSubChunkIndex; --$y, --$count){
 			if($chunk->getSubChunk($y)->isEmptyFast()){
@@ -97,6 +98,7 @@ final class ChunkSerializer{
 		$subChunks = [];
 
 		$writtenCount = 0;
+		/** @phpstan-ignore-next-line */
 		$subChunkCount = self::getSubChunkCount($chunk, $dimensionId);
 		[$minSubChunkIndex, $maxSubChunkIndex] = self::getDimensionChunkBounds($dimensionId);
 		for($y = $minSubChunkIndex; $writtenCount < $subChunkCount; ++$y, ++$writtenCount){

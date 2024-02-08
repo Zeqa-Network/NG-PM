@@ -118,6 +118,7 @@ class CachedChunk{
 
 		return LevelChunkPacket::create(
 			new ChunkPosition($chunkX, $chunkZ),
+			/** @phpstan-ignore-next-line */
 			$dimensionId,
 			count($this->hashes),
 			false,
@@ -129,6 +130,7 @@ class CachedChunk{
 	private function createCachablePacket(int $chunkX, int $chunkZ, int $dimensionId, string $chunkData) : LevelChunkPacket{
 		return LevelChunkPacket::create(
 			new ChunkPosition($chunkX, $chunkZ),
+			/** @phpstan-ignore-next-line */
 			$dimensionId,
 			count($this->hashes),
 			false,
