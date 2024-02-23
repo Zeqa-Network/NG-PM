@@ -874,6 +874,9 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 	}
 
 	public function handleBookEdit(BookEditPacket $packet) : bool{
+		if ($packet->inventorySlot>=$this->player->getInventory()->getSize()) {
+			throw new PacketHandlingException("Inventory slot does not exist");
+		}
 		//TODO: break this up into book API things
 		$oldBook = $this->player->getInventory()->getItem($packet->inventorySlot);
 		if(!($oldBook instanceof WritableBook)){
