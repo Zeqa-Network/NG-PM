@@ -30,7 +30,6 @@ use pocketmine\nbt\TreeRoot;
 use pocketmine\network\mcpe\convert\RuntimeBlockMapping;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryStream;
@@ -87,9 +86,9 @@ final class ChunkSerializer{
 	/**
 	 * @return string[]
 	 */
-	public static function serializeSubChunks(Chunk $chunk, int $dimensionId, RuntimeBlockMapping $blockMapper, PacketSerializerContext $encoderContext) : array
+	public static function serializeSubChunks(Chunk $chunk, int $dimensionId, RuntimeBlockMapping $blockMapper, int $protocolId) : array
 	{
-		$stream = PacketSerializer::encoder($encoderContext);
+		$stream = PacketSerializer::encoder($protocolId);
 
 		$emptyChunkStream = clone $stream;
 		$emptyChunkStream->putByte(8); //subchunk version 8
@@ -110,10 +109,10 @@ final class ChunkSerializer{
 		return $subChunks;
 	}
 
-	public static function serializeFullChunk(Chunk $chunk, int $dimensionId, RuntimeBlockMapping $blockMapper, PacketSerializerContext $encoderContext, ?string $tiles = null) : string{
-		$stream = PacketSerializer::encoder($encoderContext);
+	public static function serializeFullChunk(Chunk $chunk, int $dimensionId, RuntimeBlockMapping $blockMapper, int $protocolId, ?string $tiles = null) : string{
+		$stream = PacketSerializer::encoder($protocolId);
 
-		foreach(self::serializeSubChunks($chunk, $dimensionId, $blockMapper, $encoderContext) as $subChunk){
+		foreach(self::serializeSubChunks($chunk, $dimensionId, $blockMapper, $protocolId) as $subChunk){
 			$stream->put($subChunk);
 		}
 

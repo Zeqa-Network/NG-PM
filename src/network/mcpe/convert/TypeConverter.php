@@ -33,8 +33,11 @@ use pocketmine\item\VanillaItems;
 use pocketmine\nbt\NbtException;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\IntTag;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\types\GameMode as ProtocolGameMode;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
+use pocketmine\network\mcpe\protocol\types\inventory\ItemStackExtraData;
+use pocketmine\network\mcpe\protocol\types\inventory\ItemStackExtraDataShield;
 use pocketmine\network\mcpe\protocol\types\recipe\IntIdMetaItemDescriptor;
 use pocketmine\network\mcpe\protocol\types\recipe\RecipeIngredient;
 use pocketmine\network\mcpe\protocol\types\recipe\StringIdMetaItemDescriptor;
@@ -185,15 +188,18 @@ class TypeConverter{
 			}
 		}
 
+		$extraData = $id === $this->shieldRuntimeIds[$dictionaryProtocol] ?
+		new ItemStackExtraDataShield($nbt, canPlaceOn: [], canDestroy: [], blockingTick: 0) :
+		new ItemStackExtraData($nbt, canPlaceOn: [], canDestroy: []);
+		$extraDataSerializer = PacketSerializer::encoder($protocolId);
+		$extraData->write($extraDataSerializer);
+
 		return new ItemStack(
 			$id,
 			$meta,
 			$itemStack->getCount(),
 			$blockRuntimeId,
-			$nbt,
-			[],
-			[],
-			$id === $this->shieldRuntimeIds[$dictionaryProtocol] ? 0 : null
+			$extraDataSerializer->getBuffer(),
 		);
 	}
 

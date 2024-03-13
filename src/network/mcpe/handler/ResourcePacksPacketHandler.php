@@ -82,7 +82,15 @@ class ResourcePacksPacketHandler extends ChunkRequestPacketHandler{
 			);
 		}, $this->resourcePackManager->getResourceStack());
 		//TODO: support forcing server packs
-		$this->session->sendDataPacket(ResourcePacksInfoPacket::create($resourcePackEntries, [], $this->resourcePackManager->resourcePacksRequired(), false, false, []));
+		$this->session->sendDataPacket(ResourcePacksInfoPacket::create(
+			resourcePackEntries: $resourcePackEntries,
+			behaviorPackEntries: [],
+			mustAccept: $this->resourcePackManager->resourcePacksRequired(),
+			hasAddons: false,
+			hasScripts: false,
+			forceServerPacks: false,
+			cdnUrls: []
+		));
 		$this->session->getLogger()->debug("Waiting for client to accept resource packs");
 	}
 

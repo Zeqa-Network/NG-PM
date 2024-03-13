@@ -162,7 +162,6 @@ class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 			$this->server,
 			$this->network->getSessionManager(),
 			PacketPool::getInstance(),
-			$this->server->getPacketSerializerContext(),
 			new RakLibPacketSender($sessionId, $this),
 			$this->server->getPacketBroadcaster(),
 			$this->server->getEntityEventBroadcaster(),

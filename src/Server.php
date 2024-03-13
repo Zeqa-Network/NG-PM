@@ -62,7 +62,6 @@ use pocketmine\network\mcpe\PacketBroadcaster;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\serializer\PacketBatch;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\CompressionAlgorithm;
 use pocketmine\network\mcpe\raklib\RakLibInterface;
 use pocketmine\network\mcpe\StandardEntityEventBroadcaster;
@@ -303,8 +302,6 @@ class Server{
 	 */
 	private array $broadcastSubscribers = [];
 
-	/** @var array<int, PacketSerializerContext> */
-	private array $packetSerializerContexts = [];
 	/** @var array<int, PacketBroadcaster> */
 	private array $packetBroadcasters = [];
 	/** @var array<int, EntityEventBroadcaster> */
@@ -1382,13 +1379,12 @@ class Server{
 	 *
 	 * @param bool|null $sync Compression on the main thread (true) or workers (false). Default is automatic (null).
 	 */
-	public function prepareBatch(string $buffer, PacketSerializerContext $packetSerializerContext, Compressor $compressor, ?bool $sync = null, ?TimingsHandler $timings = null) : CompressBatchPromise|string{
+	public function prepareBatch(string $buffer, int $protocolId, Compressor $compressor, ?bool $sync = null, ?TimingsHandler $timings = null) : CompressBatchPromise|string{
 		$timings ??= Timings::$playerNetworkSendCompress;
 		try{
 			$timings->startTiming();
 
 			$threshold = $compressor->getCompressionThreshold();
-			$protocolId = $packetSerializerContext->getProtocolId();
 			if(($threshold === null || strlen($buffer) < $compressor->getCompressionThreshold()) && $protocolId >= ProtocolInfo::PROTOCOL_1_20_60){
 				$compressionType = CompressionAlgorithm::NONE;
 				$compressed = $buffer;
@@ -1925,19 +1921,9 @@ class Server{
 		}
 	}
 
-	public function getPacketSerializerContext(int $protocolId = ProtocolInfo::CURRENT_PROTOCOL) : PacketSerializerContext{
-		if(!isset($this->packetSerializerContexts[$protocolId])){
-			$dictionaryId = GlobalItemTypeDictionary::getDictionaryProtocol($protocolId);
-
-			$this->packetSerializerContexts[$protocolId] = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary($dictionaryId), $protocolId);
-		}
-
-		return $this->packetSerializerContexts[$protocolId];
-	}
-
 	public function getPacketBroadcaster(int $protocolId = ProtocolInfo::CURRENT_PROTOCOL) : PacketBroadcaster{
 		if(!isset($this->packetBroadcasters[$protocolId])){
-			$this->packetBroadcasters[$protocolId] = new StandardPacketBroadcaster($this, $this->getPacketSerializerContext($protocolId));
+			$this->packetBroadcasters[$protocolId] = new StandardPacketBroadcaster($this, $protocolId);
 		}
 
 		return $this->packetBroadcasters[$protocolId];
