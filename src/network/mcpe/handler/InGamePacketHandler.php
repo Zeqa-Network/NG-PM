@@ -993,10 +993,10 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 	}
 
 	public function handleLecternUpdate(LecternUpdatePacket $packet) : bool{
-		if($packet->dropBook){
-			//Drop book is handled with an interact event on use item transaction
-			return true;
-		}
+		//if($packet->dropBook){
+		//	//Drop book is handled with an interact event on use item transaction
+		//	return true;
+		//}
 
 		$pos = $packet->blockPosition;
 		$chunkX = $pos->getX() >> Chunk::COORD_BIT_SIZE;
