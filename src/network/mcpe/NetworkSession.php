@@ -528,7 +528,7 @@ class NetworkSession{
 				return false;
 			}
 
-			$this->addToSendBuffer(self::encodePacketTimed(PacketSerializer::encoder($this->protocolId), $packet));
+			$this->addToSendBuffer(self::encodePacketTimed(PacketSerializer::encoder($this->getProtocolId()), $packet));
 			if($immediate){
 				$this->flushSendBuffer(true);
 			}
@@ -575,7 +575,7 @@ class NetworkSession{
 				PacketBatch::encodeRaw($stream, $this->sendBuffer);
 
 				if($this->enableCompression){
-					$batch = $this->server->prepareBatch($stream->getBuffer(), $this->protocolId, $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
+					$batch = $this->server->prepareBatch($stream->getBuffer(), $this->getProtocolId(), $this->compressor, $syncMode, Timings::$playerNetworkSendCompressSessionBuffer);
 					if (!$batch instanceof CompressBatchPromise) {
 						$promise = new CompressBatchPromise();
 						$promise->resolve($batch);
