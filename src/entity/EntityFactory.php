@@ -234,8 +234,9 @@ final class EntityFactory{
 			$entity = $func($world, $nbt);
 
 			return $entity;
-		}catch(NbtException $e){
-			throw new SavedDataLoadingException($e->getMessage(), 0, $e);
+		}catch(NbtException|SavedDataLoadingException $e){
+		//	throw new SavedDataLoadingException($e->getMessage(), 0, $e);
+			return null;
 		}
 	}
 

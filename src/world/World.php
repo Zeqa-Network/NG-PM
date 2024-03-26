@@ -2876,7 +2876,7 @@ class World implements ChunkManager{
 					}elseif($saveIdTag instanceof IntTag){ //legacy MCPE format
 						$saveId = "legacy(" . $saveIdTag->getValue() . ")";
 					}
-					$logger->warning("Deleted unknown entity type $saveId");
+					// $logger->warning("Deleted unknown entity type $saveId");
 				}
 				//TODO: we can't prevent entities getting added to unloaded chunks if they were saved in the wrong place
 				//here, because entities currently add themselves to the world
@@ -2897,7 +2897,7 @@ class World implements ChunkManager{
 					continue;
 				}
 				if($tile === null){
-					$logger->warning("Deleted unknown tile entity type " . $nbt->getString("id", "<unknown>"));
+				//	$logger->warning("Deleted unknown tile entity type " . $nbt->getString("id", "<unknown>"));
 					continue;
 				}
 
