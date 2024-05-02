@@ -84,8 +84,8 @@ class Bow extends Tool implements Releasable{
 			$entity->setOnFire(intdiv($entity->getFireTicks(), 20) + 100);
 		}
 		$ev = new EntityShootBowEvent($player, $this, $entity, $baseForce * 3);
-
-		if($baseForce < 0.1 || $diff < 5 || $player->isSpectator()){
+		// Ensure users are able to bow-boost
+		if($baseForce <= 0 || $player->isSpectator()){
 			$ev->cancel();
 		}
 

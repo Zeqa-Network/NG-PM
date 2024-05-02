@@ -27,6 +27,7 @@ declare(strict_types=1);
  */
 namespace pocketmine;
 
+use PHPUnit\Event\Runtime\PHP;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\SimpleCommandMap;
@@ -308,6 +309,9 @@ class Server{
 	private array $packetBroadcasters = [];
 	/** @var array<string, EntityEventBroadcaster> */
 	private array $entityEventBroadcasters = [];
+	/** @var int[] */
+	private array $crashes = [];
+	private float $lastTickTime = 0;
 
 	public function getName() : string{
 		return VersionInfo::NAME;
@@ -1556,6 +1560,10 @@ class Server{
 		}catch(\Throwable $e){
 			$this->logger->logException($e);
 			$this->logger->emergency("Crashed while crashing, killing process");
+			if(PHP_OS === "Linux"){
+				// Force kill on linux
+				exec("kill -9 " . Process::pid());
+			}
 			@Process::kill(Process::pid());
 		}
 
@@ -1611,9 +1619,50 @@ class Server{
 			"thread" => $thread
 		];
 
+		// Logging critical server errors and exceptions to discord for Zeqa
+
+		$timestamp = new \DateTime();
+		$timestamp->setTimezone(new \DateTimeZone("UTC"));
+		$webhookdata = [];
+		$server = "Generic";
+		if(class_exists(\zodiax\PracticeCore::class)){
+			$server = \zodiax\PracticeCore::getRegionInfo();
+			if(strtolower($server) === "dev"){
+				return;
+			}
+		}
+		$webhookdata["content"] = "<@893876087497580605> $server had a fatal error";
+		$tracelines = [];
+		$trace = Utils::printableExceptionInfo($e);
+		for ($i = 2; $i <= 8; $i++){
+			$tracelines[] = $this->cleanTracePath(($trace[$i]));
+		}
+		$webhookdata['embeds'][] = [
+			'color' => 0xff0000,
+			'timestamp' => $timestamp->format("Y-m-d\TH:i:s.v\Z"),
+			'title' => $e->getMessage()." in ".$this->cleanTracePath($e->getFile())." on L".$e->getLine(),
+			'description' => "```js\n".substr(implode("\n", $tracelines), 0, 1990)."```"
+		];
+
+		$cfgfilepath = "plugin_data/Practice/settings.yml";
+		if(file_exists($cfgfilepath)) {
+			$cfg = yaml_parse_file($cfgfilepath);
+			$url = $cfg["webhooks"]["status"] ?? "";
+			if (strlen($url) > 12 && str_contains($url, "api/webhooks")) {
+				Internet::postURL($url, json_encode($webhookdata), 1, ["Content-Type: application/json"]);
+			}
+		}
+
 		global $lastExceptionError, $lastError;
 		$lastExceptionError = $lastError;
 		$this->crashDump();
+	}
+
+	private function cleanTracePath(string $string) : string{
+		return str_replace([
+			"plugins/Practice_v1.0.0/src/",
+			"plugins/Practice.phar/"
+		], "", Filesystem::cleanPath($string));
 	}
 
 	private function writeCrashDumpFile(CrashDump $dump) : string{
@@ -1674,31 +1723,6 @@ class Server{
 					$this->logger->debug("Not sending crashdump due to locally modified");
 					$report = false; //Don't send crashdumps for locally modified builds
 				}
-
-				if($report){
-					$url = ($this->configGroup->getPropertyBool(Yml::AUTO_REPORT_USE_HTTPS, true) ? "https" : "http") . "://" . $this->configGroup->getPropertyString(Yml::AUTO_REPORT_HOST, "crash.pmmp.io") . "/submit/api";
-					$postUrlError = "Unknown error";
-					$reply = Internet::postURL($url, [
-						"report" => "yes",
-						"name" => $this->getName() . " " . $this->getPocketMineVersion(),
-						"email" => "crash@pocketmine.net",
-						"reportPaste" => base64_encode($dump->getEncodedData())
-					], 10, [], $postUrlError);
-
-					if($reply !== null && is_object($data = json_decode($reply->getBody()))){
-						if(isset($data->crashId) && is_int($data->crashId) && isset($data->crashUrl) && is_string($data->crashUrl)){
-							$reportId = $data->crashId;
-							$reportUrl = $data->crashUrl;
-							$this->logger->emergency($this->language->translate(KnownTranslationFactory::pocketmine_crash_archive($reportUrl, (string) $reportId)));
-						}elseif(isset($data->error) && is_string($data->error)){
-							$this->logger->emergency("Automatic crash report submission failed: $data->error");
-						}else{
-							$this->logger->emergency("Invalid JSON response received from crash archive: " . $reply->getBody());
-						}
-					}else{
-						$this->logger->emergency("Failed to communicate with crash archive: $postUrlError");
-					}
-				}
 			}
 		}catch(\Throwable $e){
 			$this->logger->logException($e);
@@ -1706,18 +1730,6 @@ class Server{
 				$this->logger->critical($this->language->translate(KnownTranslationFactory::pocketmine_crash_error($e->getMessage())));
 			}catch(\Throwable $e){}
 		}
-
-		$this->forceShutdown();
-		$this->isRunning = false;
-
-		//Force minimum uptime to be >= 120 seconds, to reduce the impact of spammy crash loops
-		$spacing = ((int) $this->startTime) - time() + 120;
-		if($spacing > 0){
-			echo "--- Waiting $spacing seconds to throttle automatic restart (you can kill the process safely now) ---" . PHP_EOL;
-			sleep($spacing);
-		}
-		@Process::kill(Process::pid());
-		exit(1);
 	}
 
 	/**
@@ -1731,14 +1743,33 @@ class Server{
 		return $this->tickSleeper;
 	}
 
+	public function getLastTickTime() : float{
+		return $this->lastTickTime;
+	}
+
 	private function tickProcessor() : void{
 		$this->nextTick = microtime(true);
-
+		// Dangerous but for production servers we catch errors thrown in a tick and log them instead
+		// This is so the servers will not crash and kick everyone as that is not acceptable
 		while($this->isRunning){
-			$this->tick();
+			try{
+				$start = hrtime(true);
 
-			//sleeps are self-correcting - if we undersleep 1ms on this tick, we'll sleep an extra ms on the next tick
-			$this->tickSleeper->sleepUntil($this->nextTick);
+				$this->tick();
+				// Measure the time taken for tick in ms
+				$this->lastTickTime = (hrtime(true) - $start) / (10 ** 6);
+
+				//sleeps are self-correcting - if we undersleep 1ms on this tick, we'll sleep an extra ms on the next tick
+				$this->tickSleeper->sleepUntil($this->nextTick);
+			}catch(\Throwable $error){
+				$this->crashes[] = time();
+				if(count(array_filter($this->crashes, function ($time){
+						return $time > time() - 5;
+					})) > 10){
+					$this->forceShutdown();
+				}
+				$this->exceptionHandler($error);
+			}
 		}
 	}
 

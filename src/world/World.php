@@ -663,7 +663,8 @@ class World implements ChunkManager{
 			}
 		}
 
-		$this->save();
+		// We don't want world saving on a practice server
+		// $this->save();
 
 		$this->unregisterGenerator();
 

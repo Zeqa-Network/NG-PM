@@ -47,7 +47,8 @@ class Water extends Liquid{
 	}
 
 	public function getMinAdjacentSourcesToFormSource() : ?int{
-		return 2;
+		// Return null to prevent players forming infinite water sources
+		return null;
 	}
 
 	public function onEntityInside(Entity $entity) : bool{
