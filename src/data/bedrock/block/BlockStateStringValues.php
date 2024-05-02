@@ -93,18 +93,6 @@ final class BlockStateStringValues{
 	public const DRIPSTONE_THICKNESS_MIDDLE = "middle";
 	public const DRIPSTONE_THICKNESS_TIP = "tip";
 
-	public const FLOWER_TYPE_ALLIUM = "allium";
-	public const FLOWER_TYPE_CORNFLOWER = "cornflower";
-	public const FLOWER_TYPE_HOUSTONIA = "houstonia";
-	public const FLOWER_TYPE_LILY_OF_THE_VALLEY = "lily_of_the_valley";
-	public const FLOWER_TYPE_ORCHID = "orchid";
-	public const FLOWER_TYPE_OXEYE = "oxeye";
-	public const FLOWER_TYPE_POPPY = "poppy";
-	public const FLOWER_TYPE_TULIP_ORANGE = "tulip_orange";
-	public const FLOWER_TYPE_TULIP_PINK = "tulip_pink";
-	public const FLOWER_TYPE_TULIP_RED = "tulip_red";
-	public const FLOWER_TYPE_TULIP_WHITE = "tulip_white";
-
 	public const LEVER_DIRECTION_DOWN_EAST_WEST = "down_east_west";
 	public const LEVER_DIRECTION_DOWN_NORTH_SOUTH = "down_north_south";
 	public const LEVER_DIRECTION_EAST = "east";
@@ -143,14 +131,6 @@ final class BlockStateStringValues{
 	public const MONSTER_EGG_STONE_TYPE_STONE = "stone";
 	public const MONSTER_EGG_STONE_TYPE_STONE_BRICK = "stone_brick";
 
-	public const NEW_LEAF_TYPE_ACACIA = "acacia";
-	public const NEW_LEAF_TYPE_DARK_OAK = "dark_oak";
-
-	public const OLD_LEAF_TYPE_BIRCH = "birch";
-	public const OLD_LEAF_TYPE_JUNGLE = "jungle";
-	public const OLD_LEAF_TYPE_OAK = "oak";
-	public const OLD_LEAF_TYPE_SPRUCE = "spruce";
-
 	public const ORIENTATION_DOWN_EAST = "down_east";
 	public const ORIENTATION_DOWN_NORTH = "down_north";
 	public const ORIENTATION_DOWN_SOUTH = "down_south";
@@ -183,13 +163,6 @@ final class BlockStateStringValues{
 
 	public const SAND_TYPE_NORMAL = "normal";
 	public const SAND_TYPE_RED = "red";
-
-	public const SAPLING_TYPE_ACACIA = "acacia";
-	public const SAPLING_TYPE_BIRCH = "birch";
-	public const SAPLING_TYPE_DARK_OAK = "dark_oak";
-	public const SAPLING_TYPE_JUNGLE = "jungle";
-	public const SAPLING_TYPE_OAK = "oak";
-	public const SAPLING_TYPE_SPRUCE = "spruce";
 
 	public const SEA_GRASS_TYPE_DEFAULT = "default";
 	public const SEA_GRASS_TYPE_DOUBLE_BOT = "double_bot";
@@ -264,6 +237,11 @@ final class BlockStateStringValues{
 	public const TURTLE_EGG_COUNT_THREE_EGG = "three_egg";
 	public const TURTLE_EGG_COUNT_TWO_EGG = "two_egg";
 
+	public const VAULT_STATE_ACTIVE = "active";
+	public const VAULT_STATE_EJECTING = "ejecting";
+	public const VAULT_STATE_INACTIVE = "inactive";
+	public const VAULT_STATE_UNLOCKING = "unlocking";
+
 	public const WALL_BLOCK_TYPE_ANDESITE = "andesite";
 	public const WALL_BLOCK_TYPE_BRICK = "brick";
 	public const WALL_BLOCK_TYPE_COBBLESTONE = "cobblestone";
@@ -294,12 +272,5 @@ final class BlockStateStringValues{
 	public const WALL_CONNECTION_TYPE_WEST_NONE = "none";
 	public const WALL_CONNECTION_TYPE_WEST_SHORT = "short";
 	public const WALL_CONNECTION_TYPE_WEST_TALL = "tall";
-
-	public const WOOD_TYPE_ACACIA = "acacia";
-	public const WOOD_TYPE_BIRCH = "birch";
-	public const WOOD_TYPE_DARK_OAK = "dark_oak";
-	public const WOOD_TYPE_JUNGLE = "jungle";
-	public const WOOD_TYPE_OAK = "oak";
-	public const WOOD_TYPE_SPRUCE = "spruce";
 
 }

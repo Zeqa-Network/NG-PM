@@ -24,7 +24,6 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\handler;
 
 use pocketmine\block\BaseSign;
-use pocketmine\block\ItemFrame;
 use pocketmine\block\Lectern;
 use pocketmine\block\tile\Sign;
 use pocketmine\block\utils\SignText;
@@ -61,7 +60,6 @@ use pocketmine\network\mcpe\protocol\CraftingEventPacket;
 use pocketmine\network\mcpe\protocol\EmotePacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
-use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
 use pocketmine\network\mcpe\protocol\ItemStackRequestPacket;
 use pocketmine\network\mcpe\protocol\ItemStackResponsePacket;
 use pocketmine\network\mcpe\protocol\LabTablePacket;
@@ -225,12 +223,14 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 			$swimming = $this->resolveOnOffInputFlags($inputFlags, PlayerAuthInputFlags::START_SWIMMING, PlayerAuthInputFlags::STOP_SWIMMING);
 			$gliding = $this->resolveOnOffInputFlags($inputFlags, PlayerAuthInputFlags::START_GLIDING, PlayerAuthInputFlags::STOP_GLIDING);
 			$flying = $this->resolveOnOffInputFlags($inputFlags, PlayerAuthInputFlags::START_FLYING, PlayerAuthInputFlags::STOP_FLYING);
+			$crawling = $this->resolveOnOffInputFlags($inputFlags, PlayerAuthInputFlags::START_CRAWLING, PlayerAuthInputFlags::STOP_CRAWLING);
 			$mismatch =
 				($sneaking !== null && !$this->player->toggleSneak($sneaking)) |
 				($sprinting !== null && !$this->player->toggleSprint($sprinting)) |
 				($swimming !== null && !$this->player->toggleSwim($swimming)) |
 				($gliding !== null && !$this->player->toggleGlide($gliding)) |
-				($flying !== null && !$this->player->toggleFlight($flying));
+				($flying !== null && !$this->player->toggleFlight($flying)) |
+				($crawling !== null && !$this->player->toggleCrawl($crawling));
 			if((bool) $mismatch){
 				$this->player->sendData([$this->player]);
 			}
@@ -447,9 +447,18 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 			return false;
 		}
 		$serverItemStack = $this->session->getTypeConverter()->coreItemStackToNet($sourceSlotItem);
-		//because the client doesn't tell us the expected itemstack ID, we have to deep-compare our known
-		//itemstack info with the one the client sent. This is costly, but we don't have any other option :(
-		if(!$serverItemStack->equals($clientItemStack)){
+		//Sadly we don't have itemstack IDs here, so we have to compare the basic item properties to ensure that we're
+		//dropping the item the client expects (inventory might be out of sync with the client).
+		if(
+			$serverItemStack->getId() !== $clientItemStack->getId() ||
+			$serverItemStack->getMeta() !== $clientItemStack->getMeta() ||
+			$serverItemStack->getCount() !== $clientItemStack->getCount() ||
+			$serverItemStack->getBlockRuntimeId() !== $clientItemStack->getBlockRuntimeId()
+			//Raw extraData may not match because of TAG_Compound key ordering differences, and decoding it to compare
+			//is costly. Assume that we're in sync if id+meta+count+runtimeId match.
+			//NB: Make sure $clientItemStack isn't used to create the dropped item, as that would allow the client
+			//to change the item NBT since we're not validating it.
+		){
 			return false;
 		}
 
@@ -753,7 +762,6 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 				throw new PacketHandlingException("Invalid tag type " . get_debug_type($frontTextTag) . " for tag \"" . Sign::TAG_FRONT_TEXT . "\" in sign update data");
 			}
 			$textBlobTag = $frontTextTag->getTag(Sign::TAG_TEXT_BLOB);
-
 			if(!$textBlobTag instanceof StringTag){
 				throw new PacketHandlingException("Invalid tag type " . get_debug_type($textBlobTag) . " for tag \"" . Sign::TAG_TEXT_BLOB . "\" in sign update data");
 			}
@@ -805,15 +813,6 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 		$this->player->setViewDistance($packet->radius);
 
 		return true;
-	}
-
-	public function handleItemFrameDropItem(ItemFrameDropItemPacket $packet) : bool{
-		$blockPosition = $packet->blockPosition;
-		$block = $this->player->getWorld()->getBlockAt($blockPosition->getX(), $blockPosition->getY(), $blockPosition->getZ());
-		if($block instanceof ItemFrame && $block->getFramedItem() !== null){
-			return $this->player->attackBlock(new Vector3($blockPosition->getX(), $blockPosition->getY(), $blockPosition->getZ()), $block->getFacing());
-		}
-		return false;
 	}
 
 	public function handleBossEvent(BossEventPacket $packet) : bool{
@@ -877,11 +876,12 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 	}
 
 	public function handleBookEdit(BookEditPacket $packet) : bool{
-		if ($packet->inventorySlot>=$this->player->getInventory()->getSize()) {
-			throw new PacketHandlingException("Inventory slot does not exist");
+		$inventory = $this->player->getInventory();
+		if(!$inventory->slotExists($packet->inventorySlot)){
+			return false;
 		}
 		//TODO: break this up into book API things
-		$oldBook = $this->player->getInventory()->getItem($packet->inventorySlot);
+		$oldBook = $inventory->getItem($packet->inventorySlot);
 		if(!($oldBook instanceof WritableBook)){
 			return false;
 		}
@@ -996,11 +996,6 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 	}
 
 	public function handleLecternUpdate(LecternUpdatePacket $packet) : bool{
-		if($packet->dropBook){
-			//Drop book is handled with an interact event on use item transaction
-			return true;
-		}
-
 		$pos = $packet->blockPosition;
 		$chunkX = $pos->getX() >> Chunk::COORD_BIT_SIZE;
 		$chunkZ = $pos->getZ() >> Chunk::COORD_BIT_SIZE;

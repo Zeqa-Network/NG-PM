@@ -122,10 +122,11 @@ final class CraftingDataCache{
 							$nullUUID,
 							CraftingRecipeBlockName::CRAFTING_TABLE,
 							50,
+							true,
 							$index
 						);
 					}
-				}else {
+				}else{
 					//TODO: probably special recipe types
 				}
 			}catch(\InvalidArgumentException|ItemTypeSerializeException) {
