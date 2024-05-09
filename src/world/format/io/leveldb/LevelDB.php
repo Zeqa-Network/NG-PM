@@ -219,7 +219,7 @@ class LevelDB extends BaseWorldProvider implements WritableWorldProvider{
 		}
 
 		if(count($blockDecodeErrors) > 0){
-			$logger->error("Errors decoding blocks:\n - " . implode("\n - ", $blockDecodeErrors));
+			$logger->debug("Errors decoding blocks:\n - " . implode("\n - ", $blockDecodeErrors));
 		}
 
 		//TODO: exceptions
