@@ -161,6 +161,23 @@ class WorldManager{
 	}
 
 	/**
+	 * Loads a world using a custom provider
+	 *
+	 * @param string $name
+	 * @param WritableWorldProvider $provider
+	 * @return World
+	 */
+	public function loadCustomWorld(string $name, WritableWorldProvider $provider) : World{
+		$world = new World($this->server, $name, $provider, $this->server->getAsyncPool());
+
+		$this->worlds[$world->getId()] = $world;
+		$world->setAutoSave($this->autoSave);
+
+		(new WorldLoadEvent($world))->call();
+		return $world;
+	}
+
+	/**
 	 * Loads a world from the data directory
 	 *
 	 * @param bool $autoUpgrade Converts worlds to the default format if the world's format is not writable / deprecated
