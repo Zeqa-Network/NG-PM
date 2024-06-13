@@ -105,6 +105,7 @@ class InventoryManager{
 	private ?int $currentItemStackRequestId = null;
 
 	private bool $fullSyncRequested = false;
+	private int $currentWindowType = WindowTypes::CONTAINER;
 
 	public function __construct(
 		private Player $player,
@@ -315,7 +316,12 @@ class InventoryManager{
 			foreach($this->containerOpenCallbacks as $callback){
 				$pks = $callback($windowId, $inventory);
 				if($pks !== null){
+					$windowType = null;
 					foreach($pks as $pk){
+						if($pk instanceof ContainerOpenPacket){
+							//workaround useless bullcrap in 1.21 - ContainerClose requires a type now for some reason
+							$windowType = $pk->windowType;
+						}
 						$this->session->sendDataPacket($pk);
 					}
 					$this->syncContents($inventory);
@@ -365,10 +371,11 @@ class InventoryManager{
 		$this->openWindowDeferred(function() : void{
 			$windowId = $this->getNewWindowId();
 			$this->associateIdWithInventory($windowId, $this->player->getInventory());
+			$this->currentWindowType = WindowTypes::INVENTORY;
 
 			$this->session->sendDataPacket(ContainerOpenPacket::entityInv(
 				$windowId,
-				WindowTypes::INVENTORY,
+				$this->currentWindowType,
 				$this->player->getId()
 			));
 		});
@@ -377,7 +384,7 @@ class InventoryManager{
 	public function onCurrentWindowRemove() : void{
 		if(isset($this->networkIdToInventoryMap[$this->lastInventoryNetworkId])){
 			$this->remove($this->lastInventoryNetworkId);
-			$this->session->sendDataPacket(ContainerClosePacket::create($this->lastInventoryNetworkId, true));
+			$this->session->sendDataPacket(ContainerClosePacket::create($this->lastInventoryNetworkId, $this->currentWindowType, true));
 			if($this->pendingCloseWindowId !== null){
 				throw new AssumptionFailedError("We should not have opened a new window while a window was waiting to be closed");
 			}
@@ -397,7 +404,7 @@ class InventoryManager{
 
 		//Always send this, even if no window matches. If we told the client to close a window, it will behave as if it
 		//initiated the close and expect an ack.
-		$this->session->sendDataPacket(ContainerClosePacket::create($id, false));
+		$this->session->sendDataPacket(ContainerClosePacket::create($id, $this->currentWindowType, false));
 
 		if($this->pendingCloseWindowId === $id){
 			$this->pendingCloseWindowId = null;
