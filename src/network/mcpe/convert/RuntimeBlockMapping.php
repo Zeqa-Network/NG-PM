@@ -61,6 +61,14 @@ final class RuntimeBlockMapping{
 				self::CANONICAL_BLOCK_STATES_PATH => '',
 				self::R12_TO_CURRENT_BLOCK_MAP_PATH => '',
 			],
+			ProtocolInfo::PROTOCOL_1_20_80 => [
+				self::CANONICAL_BLOCK_STATES_PATH => '-1.20.80',
+				self::R12_TO_CURRENT_BLOCK_MAP_PATH => '-1.20.80',
+			],
+			ProtocolInfo::PROTOCOL_1_20_70 => [
+				self::CANONICAL_BLOCK_STATES_PATH => '-1.20.70',
+				self::R12_TO_CURRENT_BLOCK_MAP_PATH => '-1.20.70',
+			],
 			ProtocolInfo::PROTOCOL_1_20_60 => [
 				self::CANONICAL_BLOCK_STATES_PATH => '-1.20.60',
 				self::R12_TO_CURRENT_BLOCK_MAP_PATH => '-1.20.60',
