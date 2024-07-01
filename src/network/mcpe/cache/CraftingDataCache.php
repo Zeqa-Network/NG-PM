@@ -38,6 +38,7 @@ use pocketmine\network\mcpe\protocol\types\recipe\FurnaceRecipeBlockName;
 use pocketmine\network\mcpe\protocol\types\recipe\IntIdMetaItemDescriptor;
 use pocketmine\network\mcpe\protocol\types\recipe\PotionContainerChangeRecipe as ProtocolPotionContainerChangeRecipe;
 use pocketmine\network\mcpe\protocol\types\recipe\PotionTypeRecipe as ProtocolPotionTypeRecipe;
+use pocketmine\network\mcpe\protocol\types\recipe\RecipeUnlockingRequirement;
 use pocketmine\network\mcpe\protocol\types\recipe\ShapedRecipe as ProtocolShapedRecipe;
 use pocketmine\network\mcpe\protocol\types\recipe\ShapelessRecipe as ProtocolShapelessRecipe;
 use pocketmine\timings\Timings;
@@ -82,6 +83,7 @@ final class CraftingDataCache{
 		$itemTagDowngrader = ItemTagDowngrader::getInstance($this->protocolId);
 		$recipesWithTypeIds = [];
 
+		$noUnlockingRequirement = new RecipeUnlockingRequirement(null);
 		foreach($manager->getCraftingRecipeIndex() as $index => $recipe){
 			try{
 				if($recipe instanceof ShapelessRecipe){
@@ -101,6 +103,7 @@ final class CraftingDataCache{
 							$nullUUID,
 							$typeTag,
 							50,
+							$noUnlockingRequirement,
 							$index
 						);
 					}
@@ -114,7 +117,7 @@ final class CraftingDataCache{
 							}
 						}
 
-						$recipesWithTypeIds[] = $p = new ProtocolShapedRecipe(
+						$recipesWithTypeIds[] = $r = new ProtocolShapedRecipe(
 							CraftingDataPacket::ENTRY_SHAPED,
 							Binary::writeInt($index),
 							$inputs,
@@ -123,6 +126,7 @@ final class CraftingDataCache{
 							CraftingRecipeBlockName::CRAFTING_TABLE,
 							50,
 							true,
+							$noUnlockingRequirement,
 							$index
 						);
 					}
@@ -143,8 +147,6 @@ final class CraftingDataCache{
 				};
 				foreach($manager->getFurnaceRecipeManager($furnaceType)->getAll() as $recipe){
 					$input = $converter->coreRecipeIngredientToNet($recipe->getInput())->getDescriptor();
-					$output = $converter->coreItemStackToNet($recipe->getResult());
-
 					if(!$input instanceof IntIdMetaItemDescriptor){
 						throw new AssumptionFailedError();
 					}
@@ -152,7 +154,7 @@ final class CraftingDataCache{
 						CraftingDataPacket::ENTRY_FURNACE_DATA,
 						$input->getId(),
 						$input->getMeta(),
-						$output,
+						$converter->coreItemStackToNet($recipe->getResult()),
 						$typeTag
 					);
 				}
@@ -170,7 +172,6 @@ final class CraftingDataCache{
 					throw new AssumptionFailedError();
 				}
 				$output = $converter->coreItemStackToNet($recipe->getOutput());
-
 				$potionTypeRecipes[] = new ProtocolPotionTypeRecipe(
 					$input->getId(),
 					$input->getMeta(),

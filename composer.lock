@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dd3e364a57360b22ba4ce28ca2f730bf",
+    "content-hash": "7ade2e0f6f6e5fa7111158aa919b3f99",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -131,12 +131,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/NetherGamesMC/BedrockData.git",
-                "reference": "ea90e31ed8264fd098b4c9d3eb9ec8f9d590eb94"
+                "reference": "b743c14c8435c18a6e78a40ca8d2d09b5370b795"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockData/zipball/ea90e31ed8264fd098b4c9d3eb9ec8f9d590eb94",
-                "reference": "ea90e31ed8264fd098b4c9d3eb9ec8f9d590eb94",
+                "url": "https://api.github.com/repos/NetherGamesMC/BedrockData/zipball/b743c14c8435c18a6e78a40ca8d2d09b5370b795",
+                "reference": "b743c14c8435c18a6e78a40ca8d2d09b5370b795",
                 "shasum": ""
             },
             "default-branch": true,
@@ -148,7 +148,7 @@
             "support": {
                 "source": "https://github.com/NetherGamesMC/BedrockData/tree/master"
             },
-            "time": "2024-04-25T10:37:24+00:00"
+            "time": "2024-06-13T18:22:57+00:00"
         },
         {
             "name": "nethergamesmc/bedrock-protocol",
@@ -156,12 +156,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/NetherGamesMC/BedrockProtocol.git",
-                "reference": "44784e4f381781272e2b7a24d1ec0be1097a3d5f"
+                "reference": "55fa59233814bbf35fdb725d2b8fea7590d34c7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/44784e4f381781272e2b7a24d1ec0be1097a3d5f",
-                "reference": "44784e4f381781272e2b7a24d1ec0be1097a3d5f",
+                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/55fa59233814bbf35fdb725d2b8fea7590d34c7f",
+                "reference": "55fa59233814bbf35fdb725d2b8fea7590d34c7f",
                 "shasum": ""
             },
             "require": {
@@ -174,7 +174,7 @@
                 "ramsey/uuid": "^4.1"
             },
             "require-dev": {
-                "phpstan/phpstan": "1.10.59",
+                "phpstan/phpstan": "1.11.2",
                 "phpstan/phpstan-phpunit": "^1.0.0",
                 "phpstan/phpstan-strict-rules": "^1.0.0",
                 "phpunit/phpunit": "^9.5 || ^10.0"
@@ -203,20 +203,20 @@
             "support": {
                 "source": "https://github.com/NetherGamesMC/BedrockProtocol/tree/master"
             },
-            "time": "2024-04-25T10:34:42+00:00"
+            "time": "2024-06-14T14:13:12+00:00"
         },
         {
             "name": "pocketmine/bedrock-block-upgrade-schema",
-            "version": "4.1.0",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pmmp/BedrockBlockUpgradeSchema.git",
-                "reference": "d6b10cb0a5e69fb1dfe3b7f493bf4f519723a9cb"
+                "reference": "8a327197b3b462fa282f40f76b070ffe585a25d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pmmp/BedrockBlockUpgradeSchema/zipball/d6b10cb0a5e69fb1dfe3b7f493bf4f519723a9cb",
-                "reference": "d6b10cb0a5e69fb1dfe3b7f493bf4f519723a9cb",
+                "url": "https://api.github.com/repos/pmmp/BedrockBlockUpgradeSchema/zipball/8a327197b3b462fa282f40f76b070ffe585a25d2",
+                "reference": "8a327197b3b462fa282f40f76b070ffe585a25d2",
                 "shasum": ""
             },
             "type": "library",
@@ -227,22 +227,22 @@
             "description": "Schemas describing how to upgrade saved block data in older Minecraft: Bedrock Edition world saves",
             "support": {
                 "issues": "https://github.com/pmmp/BedrockBlockUpgradeSchema/issues",
-                "source": "https://github.com/pmmp/BedrockBlockUpgradeSchema/tree/4.1.0"
+                "source": "https://github.com/pmmp/BedrockBlockUpgradeSchema/tree/4.2.0"
             },
-            "time": "2024-04-05T17:28:14+00:00"
+            "time": "2024-06-13T17:28:26+00:00"
         },
         {
             "name": "pocketmine/bedrock-item-upgrade-schema",
-            "version": "1.9.0",
+            "version": "1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pmmp/BedrockItemUpgradeSchema.git",
-                "reference": "24a89457c17c271b5378b195931e720873865a79"
+                "reference": "b4687afa19f91eacebd46c40d487f4cc515be504"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pmmp/BedrockItemUpgradeSchema/zipball/24a89457c17c271b5378b195931e720873865a79",
-                "reference": "24a89457c17c271b5378b195931e720873865a79",
+                "url": "https://api.github.com/repos/pmmp/BedrockItemUpgradeSchema/zipball/b4687afa19f91eacebd46c40d487f4cc515be504",
+                "reference": "b4687afa19f91eacebd46c40d487f4cc515be504",
                 "shasum": ""
             },
             "type": "library",
@@ -253,9 +253,9 @@
             "description": "JSON schemas for upgrading items found in older Minecraft: Bedrock world saves",
             "support": {
                 "issues": "https://github.com/pmmp/BedrockItemUpgradeSchema/issues",
-                "source": "https://github.com/pmmp/BedrockItemUpgradeSchema/tree/1.9.0"
+                "source": "https://github.com/pmmp/BedrockItemUpgradeSchema/tree/1.10.0"
             },
-            "time": "2024-04-05T18:46:07+00:00"
+            "time": "2024-05-15T15:15:55+00:00"
         },
         {
             "name": "pocketmine/binaryutils",
@@ -1455,16 +1455,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.10.66",
+            "version": "1.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "94779c987e4ebd620025d9e5fdd23323903950bd"
+                "reference": "0d5d4294a70deb7547db655c47685d680e39cfec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/94779c987e4ebd620025d9e5fdd23323903950bd",
-                "reference": "94779c987e4ebd620025d9e5fdd23323903950bd",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/0d5d4294a70deb7547db655c47685d680e39cfec",
+                "reference": "0d5d4294a70deb7547db655c47685d680e39cfec",
                 "shasum": ""
             },
             "require": {
@@ -1507,13 +1507,9 @@
                 {
                     "url": "https://github.com/phpstan",
                     "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/phpstan/phpstan",
-                    "type": "tidelift"
                 }
             ],
-            "time": "2024-03-28T16:17:31+00:00"
+            "time": "2024-05-24T13:23:04+00:00"
         },
         {
             "name": "phpstan/phpstan-phpunit",

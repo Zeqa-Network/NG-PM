@@ -53,4 +53,6 @@ Documentation/*
 # php-cs-fixer
 /.php_cs.cache
 /.php-cs-fixer.cache
-/stub/
+
+# install-local-protocol.sh
+/composer-local-protocol.*
