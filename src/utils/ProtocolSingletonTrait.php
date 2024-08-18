@@ -50,13 +50,7 @@ trait ProtocolSingletonTrait{
 	/**
 	 * @return array<int, self>
 	 */
-	public static function getAll(bool $create = false) : array{
-		if($create){
-			foreach(ProtocolInfo::ACCEPTED_PROTOCOL as $protocolId){
-				self::getInstance($protocolId);
-			}
-		}
-
+	public static function getAll() : array{
 		return self::$instance;
 	}
 
