@@ -728,7 +728,7 @@ class NetworkSession{
 	 */
 	public function onPlayerDestroyed(string $reason) : void{
 		$this->tryDisconnect(function() use ($reason) : void{
-			$this->sendDataPacket(DisconnectPacket::create(0, $reason));
+			$this->sendDataPacket(DisconnectPacket::create(0, $reason, ""));
 		}, $reason);
 	}
 
