@@ -36,6 +36,7 @@ use pocketmine\Server;
 use pocketmine\snooze\SleeperNotifier;
 use pocketmine\timings\Timings;
 use pocketmine\utils\Utils;
+use raklib\generic\DisconnectReason;
 use raklib\generic\SocketException;
 use raklib\protocol\EncapsulatedPacket;
 use raklib\protocol\PacketReliability;
@@ -53,6 +54,7 @@ use function rtrim;
 use function str_split;
 use function substr;
 use const PHP_INT_MAX;
+use pocketmine\lang\KnownTranslationFactory;
 
 class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 	/**
@@ -137,11 +139,16 @@ class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 		}
 	}
 
-	public function onClientDisconnect(int $sessionId, string $reason) : void{
+	public function onClientDisconnect(int $sessionId, int $reason) : void{
 		if(isset($this->sessions[$sessionId])){
 			$session = $this->sessions[$sessionId];
 			unset($this->sessions[$sessionId]);
-			$session->onClientDisconnect($reason);
+			$session->onClientDisconnect($this->server->getLanguage()->translate(match($reason){
+				DisconnectReason::CLIENT_DISCONNECT => KnownTranslationFactory::pocketmine_disconnect_clientDisconnect(),
+				DisconnectReason::PEER_TIMEOUT => KnownTranslationFactory::pocketmine_disconnect_error_timeout(),
+				DisconnectReason::CLIENT_RECONNECT => KnownTranslationFactory::pocketmine_disconnect_clientReconnect(),
+				default => KnownTranslationFactory::pocketmine_disconnect_error("", (string)$reason)
+			}));
 		}
 	}
 
