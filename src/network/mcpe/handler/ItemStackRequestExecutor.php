@@ -37,6 +37,7 @@ use pocketmine\inventory\transaction\TransactionBuilder;
 use pocketmine\inventory\transaction\TransactionBuilderInventory;
 use pocketmine\item\Item;
 use pocketmine\network\mcpe\InventoryManager;
+use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\types\inventory\ContainerUIIds;
 use pocketmine\network\mcpe\protocol\types\inventory\stackrequest\CraftingConsumeInputStackRequestAction;
 use pocketmine\network\mcpe\protocol\types\inventory\stackrequest\CraftingCreateSpecificResultStackRequestAction;
@@ -374,7 +375,7 @@ class ItemStackRequestExecutor{
 					$this->setNextCreatedItem($window->getOutput($optionId));
 				}
 			}else{
-				$this->beginCrafting($action->getRecipeId(), 1);
+				$this->beginCrafting($action->getRecipeId(), $this->player->getNetworkSession()->getProtocolId() >= ProtocolInfo::PROTOCOL_1_21_20 ? $action->getRepetitions() : 1);
 			}
 		}elseif($action instanceof CraftRecipeAutoStackRequestAction){
 			$this->beginCrafting($action->getRecipeId(), $action->getRepetitions());
