@@ -151,6 +151,7 @@ use pocketmine\block\utils\DripleafState;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\FroglightType;
 use pocketmine\block\utils\LeverFacing;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\block\VanillaBlocks as Blocks;
 use pocketmine\block\Vine;
 use pocketmine\block\Wall;
@@ -254,7 +255,8 @@ final class BlockObjectToStateSerializer implements BlockStateSerializer{
 
 		$locatedSerializer = $this->serializers[$typeId] ?? null;
 		if($locatedSerializer === null){
-			throw new BlockStateSerializeException("No serializer registered for " . get_class($blockState) . " with type ID $typeId");
+			return $this->serializeBlock(VanillaBlocks::AIR());
+			// throw new BlockStateSerializeException("No serializer registered for " . get_class($blockState) . " with type ID $typeId");
 		}
 
 		/**
