@@ -232,7 +232,7 @@ class NetworkSession{
 	}
 
 	private function getLogPrefix() : string{
-		return "NetworkSession: " . $this->getDisplayName();
+		return "NetworkSession";
 	}
 
 	public function getLogger() : \Logger{

@@ -1786,8 +1786,8 @@ class Server{
 		$position = $player->getPosition();
 		$this->logger->info($this->language->translate(KnownTranslationFactory::pocketmine_player_logIn(
 			TextFormat::AQUA . $player->getName() . TextFormat::RESET,
-			$session->getIp(),
-			(string) $session->getPort(),
+			"",
+			"",
 			(string) $player->getId(),
 			$position->getWorld()->getDisplayName(),
 			(string) round($position->x, 4),
