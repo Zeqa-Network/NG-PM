@@ -115,6 +115,7 @@ use pocketmine\utils\BinaryStream;
 use pocketmine\utils\ObjectSet;
 use pocketmine\utils\TextFormat;
 use pocketmine\world\Position;
+use pocketmine\world\World;
 use pocketmine\YmlServerProperties;
 use function array_keys;
 use function array_map;
@@ -197,6 +198,7 @@ class NetworkSession{
 	 * @phpstan-var ObjectSet<\Closure() : void>
 	 */
 	private ObjectSet $disposeHooks;
+	private ?int $customTime = null;
 
 	public function __construct(
 		private Server $server,
@@ -1300,6 +1302,15 @@ class NetworkSession{
 
 	}
 
+	public function setCustomTime(int $time) : void{
+		$this->syncWorldTime($this->customTime = $time);
+	}
+
+	public function removeCustomTime() : void{
+		$this->customTime = null;
+		$this->syncWorldTime($this->player?->getWorld()->getTime() ?? World::TIME_DAY);
+	}
+
 	public function onEnterWorld() : void{
 		if($this->player !== null){
 			$world = $this->player->getWorld();
@@ -1311,7 +1322,7 @@ class NetworkSession{
 	}
 
 	public function syncWorldTime(int $worldTime) : void{
-		$this->sendDataPacket(SetTimePacket::create($worldTime));
+		$this->sendDataPacket(SetTimePacket::create($this->customTime ?? $worldTime));
 	}
 
 	public function syncWorldDifficulty(int $worldDifficulty) : void{
