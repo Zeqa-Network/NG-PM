@@ -1627,7 +1627,7 @@ class Server{
 		$server = "Generic";
 		if(class_exists(\zodiax\PracticeCore::class)){
 			$server = \zodiax\PracticeCore::getRegionInfo();
-			if(strtolower($server) === "dev"){
+			if(str_contains($server, "dev")){
 				return;
 			}
 		}
