@@ -1645,11 +1645,13 @@ class Server{
 		];
 
 		$cfgfilepath = "plugin_data/Practice/settings.yml";
+		$encoded = json_encode($webhookdata);
 		if(file_exists($cfgfilepath)) {
+			/** @phpstan-var array<string, array<string, string>> $cfg */
 			$cfg = yaml_parse_file($cfgfilepath);
 			$url = $cfg["webhooks"]["status"] ?? "";
-			if (strlen($url) > 12 && str_contains($url, "api/webhooks")) {
-				Internet::postURL($url, json_encode($webhookdata), 1, ["Content-Type: application/json"]);
+			if (strlen($url) > 12 && str_contains($url, "api/webhooks") && $encoded !== false) {
+				Internet::postURL($url, $encoded, 1, ["Content-Type: application/json"]);
 			}
 		}
 

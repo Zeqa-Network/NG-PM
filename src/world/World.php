@@ -2318,7 +2318,7 @@ class World implements ChunkManager{
 				$collisions = 0;
 				$allowed = false;
 				foreach($this->getCollidingEntities($collisionBox) as $collidingEntity){
-					if($collidingEntity instanceof Player){
+					if($collidingEntity instanceof Player && $player instanceof Player){
 						$collisions++;
 						if(!$player->canSee($collidingEntity)){
 							$allowed = true;
