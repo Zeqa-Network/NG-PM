@@ -162,11 +162,6 @@ class WorldManager{
 
 	/**
 	 * Loads a world using a custom provider
-	 *
-	 * @param string $name
-	 * @param WritableWorldProvider $provider
-	 *
-	 * @return World
 	 */
 	public function loadCustomWorld(string $name, WritableWorldProvider $provider) : World{
 		$world = new World($this->server, $name, $provider, $this->server->getAsyncPool());
