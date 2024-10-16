@@ -2315,8 +2315,18 @@ class World implements ChunkManager{
 		foreach($tx->getBlocks() as [$x, $y, $z, $block]){
 			$block->position($this, $x, $y, $z);
 			foreach($block->getCollisionBoxes() as $collisionBox){
-				if(count($this->getCollidingEntities($collisionBox)) > 0){
-					return false;  //Entity in block
+				$collisions = 0;
+				$allowed = false;
+				foreach($this->getCollidingEntities($collisionBox) as $collidingEntity){
+					if($collidingEntity instanceof Player){
+						$collisions++;
+						if(!$player->canSee($collidingEntity)){
+							$allowed = true;
+						}
+					}
+				}
+				if($collisions > 0 && !$allowed){
+					return false;
 				}
 			}
 		}
@@ -2424,7 +2434,7 @@ class World implements ChunkManager{
 		for($x = $minX; $x <= $maxX; ++$x){
 			for($z = $minZ; $z <= $maxZ; ++$z){
 				foreach($this->getChunkEntities($x, $z) as $ent){
-					if($ent !== $entity && $ent->boundingBox->intersectsWith($bb)){
+					if($ent !== $entity && $ent->boundingBox->intersectsWith($bb, 0.01)){
 						$nearby[] = $ent;
 					}
 				}
