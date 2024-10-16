@@ -165,6 +165,7 @@ class WorldManager{
 	 *
 	 * @param string $name
 	 * @param WritableWorldProvider $provider
+	 *
 	 * @return World
 	 */
 	public function loadCustomWorld(string $name, WritableWorldProvider $provider) : World{

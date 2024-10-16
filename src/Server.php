@@ -27,7 +27,6 @@ declare(strict_types=1);
  */
 namespace pocketmine;
 
-use PHPUnit\Event\Runtime\PHP;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\SimpleCommandMap;
@@ -125,27 +124,29 @@ use pocketmine\YmlServerProperties as Yml;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Filesystem\Path;
 use function array_fill;
+use function array_filter;
 use function array_sum;
-use function base64_encode;
 use function chr;
+use function class_exists;
 use function cli_set_process_title;
 use function copy;
 use function count;
 use function date;
+use function exec;
 use function fclose;
 use function file_exists;
 use function file_put_contents;
 use function filemtime;
 use function fopen;
 use function get_class;
+use function hrtime;
+use function implode;
 use function ini_set;
 use function is_array;
 use function is_dir;
-use function is_int;
-use function is_object;
 use function is_resource;
 use function is_string;
-use function json_decode;
+use function json_encode;
 use function max;
 use function microtime;
 use function min;
@@ -159,6 +160,7 @@ use function round;
 use function sleep;
 use function spl_object_id;
 use function sprintf;
+use function str_contains;
 use function str_repeat;
 use function str_replace;
 use function stripos;
@@ -166,13 +168,15 @@ use function strlen;
 use function strrpos;
 use function strtolower;
 use function strval;
+use function substr;
 use function time;
 use function touch;
 use function trim;
 use function yaml_parse;
+use function yaml_parse_file;
 use const DIRECTORY_SEPARATOR;
-use const PHP_EOL;
 use const PHP_INT_MAX;
+use const PHP_OS;
 
 /**
  * The class that manages everything
@@ -1640,8 +1644,8 @@ class Server{
 		$webhookdata['embeds'][] = [
 			'color' => 0xff0000,
 			'timestamp' => $timestamp->format("Y-m-d\TH:i:s.v\Z"),
-			'title' => $e->getMessage()." in ".$this->cleanTracePath($e->getFile())." on L".$e->getLine(),
-			'description' => "```js\n".substr(implode("\n", $tracelines), 0, 1990)."```"
+			'title' => $e->getMessage() . " in " . $this->cleanTracePath($e->getFile()) . " on L" . $e->getLine(),
+			'description' => "```js\n" . substr(implode("\n", $tracelines), 0, 1990) . "```"
 		];
 
 		$cfgfilepath = "plugin_data/Practice/settings.yml";
