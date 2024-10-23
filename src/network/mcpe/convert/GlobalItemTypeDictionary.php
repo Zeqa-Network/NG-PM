@@ -43,6 +43,7 @@ final class GlobalItemTypeDictionary{
 
 	private const PATHS = [
 		ProtocolInfo::CURRENT_PROTOCOL => "",
+		ProtocolInfo::PROTOCOL_1_21_30 => "-1.21.30",
 		ProtocolInfo::PROTOCOL_1_21_20 => "-1.21.20",
 		ProtocolInfo::PROTOCOL_1_21_2 => "-1.21.2",
 		ProtocolInfo::PROTOCOL_1_21_0 => "-1.21.2",
