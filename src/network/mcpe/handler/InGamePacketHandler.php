@@ -82,6 +82,7 @@ use pocketmine\network\mcpe\protocol\PlayerHotbarPacket;
 use pocketmine\network\mcpe\protocol\PlayerInputPacket;
 use pocketmine\network\mcpe\protocol\PlayerSkinPacket;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\serializer\BitSet;
 use pocketmine\network\mcpe\protocol\ServerSettingsRequestPacket;
 use pocketmine\network\mcpe\protocol\SetActorMotionPacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
@@ -142,7 +143,7 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 	protected ?Vector3 $lastPlayerAuthInputPosition = null;
 	protected ?float $lastPlayerAuthInputYaw = null;
 	protected ?float $lastPlayerAuthInputPitch = null;
-	protected ?int $lastPlayerAuthInputFlags = null;
+	protected ?BitSet $lastPlayerAuthInputFlags = null;
 
 	/** @var bool */
 	public $forceMoveSync = false;
@@ -171,9 +172,9 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 		return true;
 	}
 
-	private function resolveOnOffInputFlags(int $inputFlags, int $startFlag, int $stopFlag) : ?bool{
-		$enabled = ($inputFlags & (1 << $startFlag)) !== 0;
-		$disabled = ($inputFlags & (1 << $stopFlag)) !== 0;
+	private function resolveOnOffInputFlags(BitSet $inputFlags, int $startFlag, int $stopFlag) : ?bool{
+		$enabled = $inputFlags->get($startFlag);
+		$disabled = $inputFlags->get($stopFlag);
 		if($enabled !== $disabled){
 			return $enabled;
 		}
@@ -240,7 +241,7 @@ class InGamePacketHandler extends ChunkRequestPacketHandler{
 				$this->player->sendData([$this->player]);
 			}
 
-			if($packet->hasFlag(PlayerAuthInputFlags::START_JUMPING)){
+			if($packet->getInputFlags()->get(PlayerAuthInputFlags::START_JUMPING)){
 				$this->player->jump();
 			}
 		}

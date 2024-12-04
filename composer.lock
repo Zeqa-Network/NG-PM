@@ -207,12 +207,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/NetherGamesMC/BedrockData.git",
-                "reference": "2e8861f2cc2ce81f11baa5dee28dd23e01625893"
+                "reference": "25b7204da2aeb220f3346ad558499514176ca653"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockData/zipball/2e8861f2cc2ce81f11baa5dee28dd23e01625893",
-                "reference": "2e8861f2cc2ce81f11baa5dee28dd23e01625893",
+                "url": "https://api.github.com/repos/NetherGamesMC/BedrockData/zipball/25b7204da2aeb220f3346ad558499514176ca653",
+                "reference": "25b7204da2aeb220f3346ad558499514176ca653",
                 "shasum": ""
             },
             "default-branch": true,
@@ -224,7 +224,7 @@
             "support": {
                 "source": "https://github.com/NetherGamesMC/BedrockData/tree/master"
             },
-            "time": "2024-10-23T22:00:31+00:00"
+            "time": "2024-12-03T21:25:53+00:00"
         },
         {
             "name": "nethergamesmc/bedrock-protocol",
@@ -232,12 +232,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/NetherGamesMC/BedrockProtocol.git",
-                "reference": "b03df4ca37ab58495fe540f889d924667c0f50ff"
+                "reference": "2cbe4643c132e5e87e9e5b27d52c7809a6e8dfc3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/b03df4ca37ab58495fe540f889d924667c0f50ff",
-                "reference": "b03df4ca37ab58495fe540f889d924667c0f50ff",
+                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/2cbe4643c132e5e87e9e5b27d52c7809a6e8dfc3",
+                "reference": "2cbe4643c132e5e87e9e5b27d52c7809a6e8dfc3",
                 "shasum": ""
             },
             "require": {
@@ -279,7 +279,7 @@
             "support": {
                 "source": "https://github.com/NetherGamesMC/BedrockProtocol/tree/master"
             },
-            "time": "2024-10-23T00:27:58+00:00"
+            "time": "2024-12-03T23:18:44+00:00"
         },
         {
             "name": "pocketmine/bedrock-block-upgrade-schema",
@@ -792,6 +792,7 @@
                 "issues": "https://github.com/cweiske/jsonmapper/issues",
                 "source": "https://github.com/pmmp/netresearch-jsonmapper/tree/v4.2.1000"
             },
+            "abandoned": true,
             "time": "2023-07-14T10:44:14+00:00"
         },
         {
@@ -1101,16 +1102,16 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v5.4.44",
+            "version": "v5.4.45",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "76c3818964e9d32be3862c9318ae3ba9aa280ddc"
+                "reference": "57c8294ed37d4a055b77057827c67f9558c95c54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/76c3818964e9d32be3862c9318ae3ba9aa280ddc",
-                "reference": "76c3818964e9d32be3862c9318ae3ba9aa280ddc",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/57c8294ed37d4a055b77057827c67f9558c95c54",
+                "reference": "57c8294ed37d4a055b77057827c67f9558c95c54",
                 "shasum": ""
             },
             "require": {
@@ -1148,7 +1149,7 @@
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/filesystem/tree/v5.4.44"
+                "source": "https://github.com/symfony/filesystem/tree/v5.4.45"
             },
             "funding": [
                 {
@@ -1164,7 +1165,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-16T14:52:48+00:00"
+            "time": "2024-10-22T13:05:35+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1518,16 +1519,16 @@
     "packages-dev": [
         {
             "name": "myclabs/deep-copy",
-            "version": "1.12.0",
+            "version": "1.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c"
+                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c",
-                "reference": "3a6b9a42cd8f8771bd4295d13e1423fa7f3d942c",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/123267b2c49fbf30d78a7b2d333f6be754b94845",
+                "reference": "123267b2c49fbf30d78a7b2d333f6be754b94845",
                 "shasum": ""
             },
             "require": {
@@ -1566,7 +1567,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.12.0"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.12.1"
             },
             "funding": [
                 {
@@ -1574,7 +1575,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-06-12T14:39:25+00:00"
+            "time": "2024-11-08T17:47:46+00:00"
         },
         {
             "name": "nikic/php-parser",
