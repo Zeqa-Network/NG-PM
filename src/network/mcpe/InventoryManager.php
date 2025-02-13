@@ -49,7 +49,8 @@ use pocketmine\network\mcpe\protocol\InventorySlotPacket;
 use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\types\BlockPosition;
 use pocketmine\network\mcpe\protocol\types\inventory\ContainerIds;
-use pocketmine\network\mcpe\protocol\types\inventory\CreativeContentEntry;
+use pocketmine\network\mcpe\protocol\types\inventory\CreativeGroupEntry;
+use pocketmine\network\mcpe\protocol\types\inventory\CreativeItemEntry;
 use pocketmine\network\mcpe\protocol\types\inventory\FullContainerName;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStackWrapper;
@@ -649,10 +650,10 @@ class InventoryManager{
 		if(!$this->player->isSpectator()){
 			//creative inventory may have holes if items were unregistered - ensure network IDs used are always consistent
 			foreach(CreativeInventory::getInstance()->getAll() as $k => $item){
-				$entries[] = new CreativeContentEntry($k, $typeConverter->coreItemStackToNet($this->session->getProtocolId(), $item));
+				$entries[] = new CreativeItemEntry($k, $typeConverter->coreItemStackToNet($this->session->getProtocolId(), $item), 0);
 			}
 		}
-		$this->session->sendDataPacket(CreativeContentPacket::create($entries));
+		$this->session->sendDataPacket(CreativeContentPacket::create([new CreativeGroupEntry(1, "a", new ItemStack(0, 0, 0, 0, ""))], $entries));
 	}
 
 	private function newItemStackId() : int{

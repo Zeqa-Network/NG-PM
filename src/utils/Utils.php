@@ -587,6 +587,18 @@ final class Utils{
 		}
 	}
 
+	/**
+	 * Gets rid of PHPStan BenevolentUnionType on array keys, so that wrong type errors get reported properly
+	 * Use this if you don't care what the key type is and just want proper PHPStan error reporting
+	 *
+	 * @phpstan-template TValueType
+	 * @phpstan-param array<TValueType> $array
+	 * @phpstan-return array<int|string, TValueType>
+	 */
+	public static function promoteKeys(array $array) : array{
+		return $array;
+	}
+
 	public static function checkUTF8(string $string) : void{
 		if(!mb_check_encoding($string, 'UTF-8')){
 			throw new \InvalidArgumentException("Text must be valid UTF-8");
