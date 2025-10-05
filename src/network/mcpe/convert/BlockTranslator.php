@@ -38,6 +38,7 @@ use function str_replace;
  * @internal
  */
 final class BlockTranslator{
+	private static array $HASH_PROTOCOLS;
 	public const CANONICAL_BLOCK_STATES_PATH = 0;
 	public const BLOCK_STATE_META_MAP_PATH = 1;
 
@@ -138,11 +139,23 @@ final class BlockTranslator{
 	private BlockStateData $fallbackStateData;
 	private int $fallbackStateId;
 
+	private static function setupHashProtocols() : void{
+		if (!isset(self::$HASH_PROTOCOLS)) {
+			self::$HASH_PROTOCOLS = [
+				ProtocolInfo::PROTOCOL_1_21_70 => function(BlockStateData $data) : BlockStateData {
+					return $data;
+				}
+			];
+		}
+	}
+
 	public static function loadFromProtocolId(int $protocolId) : BlockTranslator{
+		self::setupHashProtocols();
 		$canonicalBlockStatesRaw = Filesystem::fileGetContents(str_replace(".nbt", self::PATHS[$protocolId][self::CANONICAL_BLOCK_STATES_PATH] . ".nbt", BedrockDataFiles::CANONICAL_BLOCK_STATES_NBT));
 		$metaMappingRaw = Filesystem::fileGetContents(str_replace(".json", self::PATHS[$protocolId][self::BLOCK_STATE_META_MAP_PATH] . ".json", BedrockDataFiles::BLOCK_STATE_META_MAP_JSON));
+		$isHash = isset(self::$HASH_PROTOCOLS[$protocolId]);
 		return new self(
-			BlockStateDictionary::loadFromString($canonicalBlockStatesRaw, $metaMappingRaw),
+			BlockStateDictionary::loadFromString($canonicalBlockStatesRaw, $metaMappingRaw, $isHash, $isHash ? self::$HASH_PROTOCOLS[$protocolId] : null),
 			GlobalBlockStateHandlers::getSerializer(),
 		);
 	}
@@ -175,6 +188,10 @@ final class BlockTranslator{
 		}
 
 		return $this->networkIdCache[$internalStateId] = $networkId;
+	}
+
+	public function networkIdsAreHashes() : bool{
+		return $this->blockStateDictionary->networkIdsAreHashes();
 	}
 
 	/**

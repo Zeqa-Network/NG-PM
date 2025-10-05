@@ -44,6 +44,7 @@ use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\protocol\types\entity\EntityIds;
 use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataCollection;
 use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataProperties;
+use pocketmine\network\mcpe\protocol\types\entity\UnlimitedIntMetadataProperty;
 use pocketmine\player\Player;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
 use pocketmine\world\sound\BlockBreakSound;
@@ -202,7 +203,7 @@ class FallingBlock extends Entity{
 
 	protected function sendSpawnPacket(Player $player) : void{
 		$typeConverter = $player->getNetworkSession()->getTypeConverter();
-		$this->getNetworkProperties()->setInt(EntityMetadataProperties::VARIANT, $typeConverter->getBlockTranslator()->internalIdToNetworkId($this->block->getStateId()));
+		$this->getNetworkProperties()->set(EntityMetadataProperties::VARIANT, new UnlimitedIntMetadataProperty($typeConverter->getBlockTranslator()->internalIdToNetworkId($this->block->getStateId())), true);
 		$this->getNetworkProperties()->clearDirtyProperties(); //needed for multi protocol
 
 		parent::sendSpawnPacket($player);

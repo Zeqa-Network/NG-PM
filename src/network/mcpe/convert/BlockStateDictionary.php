@@ -23,13 +23,20 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\convert;
 
+use Closure;
+use InvalidArgumentException;
+use JsonException;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockTypeNames;
+use pocketmine\nbt\LittleEndianNbtSerializer;
 use pocketmine\nbt\NbtDataException;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\Tag;
 use pocketmine\nbt\TreeRoot;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
 use pocketmine\utils\Utils;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
+use ReflectionClass;
 use function array_key_first;
 use function array_map;
 use function count;
@@ -59,10 +66,11 @@ final class BlockStateDictionary{
 	/**
 	 * @param BlockStateDictionaryEntry[] $states
 	 *
-	 * @phpstan-param list<BlockStateDictionaryEntry> $states
+	 * @phpstan-param array<int, BlockStateDictionaryEntry> $states
 	 */
 	public function __construct(
-		private array $states
+		private array $states,
+		private bool $useHash = false
 	){
 		$table = [];
 		foreach($this->states as $stateId => $stateNbt){
@@ -184,11 +192,42 @@ final class BlockStateDictionary{
 		);
 	}
 
-	public static function loadFromString(string $blockPaletteContents, string $metaMapContents) : self{
+	private static function getHashStateId(BlockStateData $data) : int{
+		$name = $data->getName();
+
+		$stream = new LittleEndianNbtSerializer();
+
+		$compound = new CompoundTag();
+		$compound->setString("name", $name);
+
+		$states = new CompoundTag();
+
+		$blockStates = $data->getStates();
+		ksort($blockStates);
+		foreach (Utils::stringifyKeys($blockStates) as $key => $state) {
+			$states->setTag($key, $state);
+		}
+
+		$compound->setTag("states", $states);
+
+		$hash = hash("fnv1a32", $stream->write(new TreeRoot($compound)));
+		return (int)hexdec($hash);
+	}
+
+	/**
+	 * @param string        $blockPaletteContents
+	 * @param string        $metaMapContents
+	 * @param bool          $useHash
+	 * @param Closure(BlockStateData): BlockStateData|null $upgradeFunc
+	 *
+	 * @return self
+	 * @throws JsonException
+	 */
+	public static function loadFromString(string $blockPaletteContents, string $metaMapContents, bool $useHash = false, ?Closure $upgradeFunc = null) : self{
 		$upgrader = GlobalBlockStateHandlers::getUpgrader()->getBlockStateUpgrader();
 		$metaMap = json_decode($metaMapContents, flags: JSON_THROW_ON_ERROR);
 		if(!is_array($metaMap)){
-			throw new \InvalidArgumentException("Invalid metaMap, expected array for root type, got " . get_debug_type($metaMap));
+			throw new InvalidArgumentException("Invalid metaMap, expected array for root type, got " . get_debug_type($metaMap));
 		}
 
 		$entries = [];
@@ -197,7 +236,7 @@ final class BlockStateDictionary{
 
 		//this hack allows the internal cache index to use interned strings which are already available in the
 		//core code anyway, saving around 40 KB of memory
-		foreach((new \ReflectionClass(BlockTypeNames::class))->getConstants() as $value){
+		foreach((new ReflectionClass(BlockTypeNames::class))->getConstants() as $value){
 			if(is_string($value)){
 				$uniqueNames[$value] = $value;
 			}
@@ -206,16 +245,27 @@ final class BlockStateDictionary{
 		foreach(self::loadPaletteFromString($blockPaletteContents) as $i => $state){
 			$meta = $metaMap[$i] ?? null;
 			if($meta === null){
-				throw new \InvalidArgumentException("Missing associated meta value for state $i (" . $state->toNbt() . ")");
+				throw new InvalidArgumentException("Missing associated meta value for state $i (" . $state->toNbt() . ")");
 			}
 			if(!is_int($meta)){
-				throw new \InvalidArgumentException("Invalid metaMap offset $i, expected int, got " . get_debug_type($meta));
+				throw new InvalidArgumentException("Invalid metaMap offset $i, expected int, got " . get_debug_type($meta));
 			}
 			$newState = $upgrader->upgrade($state);
 			$uniqueName = $uniqueNames[$newState->getName()] ??= $newState->getName();
 			$entries[$i] = new BlockStateDictionaryEntry($uniqueName, $newState->getStates(), $meta, $newState->equals($state) ? null : $state);
+
+			$entries[$useHash ? self::getHashStateId($state) : $i] = new BlockStateDictionaryEntry($uniqueName, $newState->getStates(), $meta, $newState->equals($state) ? null : $state);
+
+			if ($upgradeFunc !== null) {
+				$state = $upgradeFunc($state);
+				$entries[$useHash ? self::getHashStateId($state) : $i] = new BlockStateDictionaryEntry($uniqueName, $newState->getStates(), $meta, null);
+			}
 		}
 
-		return new self($entries);
+		return new self($entries, $useHash);
+	}
+
+	public function networkIdsAreHashes() : bool {
+		return $this->useHash;
 	}
 }
