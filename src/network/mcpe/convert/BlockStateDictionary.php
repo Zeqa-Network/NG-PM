@@ -31,7 +31,6 @@ use pocketmine\data\bedrock\block\BlockTypeNames;
 use pocketmine\nbt\LittleEndianNbtSerializer;
 use pocketmine\nbt\NbtDataException;
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\nbt\tag\Tag;
 use pocketmine\nbt\TreeRoot;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
 use pocketmine\utils\Utils;
@@ -41,10 +40,13 @@ use function array_key_first;
 use function array_map;
 use function count;
 use function get_debug_type;
+use function hash;
+use function hexdec;
 use function is_array;
 use function is_int;
 use function is_string;
 use function json_decode;
+use function ksort;
 use const JSON_THROW_ON_ERROR;
 
 /**
@@ -211,16 +213,12 @@ final class BlockStateDictionary{
 		$compound->setTag("states", $states);
 
 		$hash = hash("fnv1a32", $stream->write(new TreeRoot($compound)));
-		return (int)hexdec($hash);
+		return (int) hexdec($hash);
 	}
 
 	/**
-	 * @param string        $blockPaletteContents
-	 * @param string        $metaMapContents
-	 * @param bool          $useHash
 	 * @param Closure(BlockStateData): BlockStateData|null $upgradeFunc
 	 *
-	 * @return self
 	 * @throws JsonException
 	 */
 	public static function loadFromString(string $blockPaletteContents, string $metaMapContents, bool $useHash = false, ?Closure $upgradeFunc = null) : self{

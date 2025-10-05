@@ -31,6 +31,7 @@ use pocketmine\math\Facing;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\world\Position;
 use pocketmine\world\sound\Sound;
+use function in_array;
 
 /**
  * This trait handles falling behaviour for blocks that need them.

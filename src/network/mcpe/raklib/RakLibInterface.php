@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\raklib;
 
+use libasynCurl\Curl;
 use pmmp\thread\ThreadSafeArray;
 use pocketmine\lang\KnownTranslationFactory;
 use pocketmine\network\AdvancedNetworkInterface;
@@ -51,11 +52,15 @@ use raklib\server\ipc\UserToRakLibThreadMessageSender;
 use raklib\server\ServerEventListener;
 use raklib\utils\InternetAddress;
 use zeqa\discord\DiscordUtil;
+use zeqa\PracticeCore;
 use function addcslashes;
 use function base64_encode;
+use function class_exists;
 use function implode;
+use function json_encode;
 use function mt_rand;
 use function rtrim;
+use function str_contains;
 use function substr;
 use const PHP_INT_MAX;
 
@@ -222,13 +227,14 @@ class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 				);
 				//intentionally doesn't use logException, we don't want spammy packet error traces to appear in release mode
 				$logger->debug(implode("\n", Utils::printableExceptionInfo($e)));
-				if(class_exists(DiscordUtil::class)){
+				if(class_exists(DiscordUtil::class) && class_exists(PracticeCore::class)){
 					if(str_contains($reason, "Exceeded rate limit")){
 						$user = $session->getPlayer()?->getName() ?? $name;
-						$region = \zeqa\PracticeCore::getRegionInfo();
+						/** @phpstan-ignore-next-line */
+						$region = PracticeCore::getRegionInfo();
 						$content = "[$region] $user ($address) - $reason";
 						/** @phpstan-ignore-next-line AccessToConstantPropertyOnUnknownClass */
-						\libasynCurl\Curl::postRequest(DiscordUtil::PACKET_KICK_WEBHOOk, json_encode(["content" => $content]), 10, ["Content-Type: application/json"]);
+						Curl::postRequest(DiscordUtil::PACKET_KICK_WEBHOOk, json_encode(["content" => $content]), 10, ["Content-Type: application/json"]);
 					}
 				}
 

@@ -83,7 +83,6 @@ class WorldManager{
 		return $world;
 	}
 
-
 	public function getProviderManager() : WorldProviderManager{
 		return $this->providerManager;
 	}

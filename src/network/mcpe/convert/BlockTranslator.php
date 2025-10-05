@@ -38,6 +38,7 @@ use function str_replace;
  * @internal
  */
 final class BlockTranslator{
+	/** @var array<int, callable(BlockStateData): BlockStateData> */
 	private static array $HASH_PROTOCOLS;
 	public const CANONICAL_BLOCK_STATES_PATH = 0;
 	public const BLOCK_STATE_META_MAP_PATH = 1;
@@ -155,7 +156,7 @@ final class BlockTranslator{
 		$metaMappingRaw = Filesystem::fileGetContents(str_replace(".json", self::PATHS[$protocolId][self::BLOCK_STATE_META_MAP_PATH] . ".json", BedrockDataFiles::BLOCK_STATE_META_MAP_JSON));
 		$isHash = isset(self::$HASH_PROTOCOLS[$protocolId]);
 		return new self(
-			BlockStateDictionary::loadFromString($canonicalBlockStatesRaw, $metaMappingRaw, $isHash, $isHash ? self::$HASH_PROTOCOLS[$protocolId] : null),
+			BlockStateDictionary::loadFromString($canonicalBlockStatesRaw, $metaMappingRaw, $isHash, $isHash ? (self::$HASH_PROTOCOLS[$protocolId])(...) : null),
 			GlobalBlockStateHandlers::getSerializer(),
 		);
 	}

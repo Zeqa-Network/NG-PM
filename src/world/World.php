@@ -1248,7 +1248,7 @@ class World implements ChunkManager{
 
 	/**
 	 * @param Vector3[] $blocks
-	 * @phpstan-param list<Vector3> $blocks
+	 * @phpstan-param array<int, Vector3> $blocks
 	 *
 	 * @return UpdateSubChunkBlocksPacket[]
 	 * @phpstan-return list<ClientboundPacket>
