@@ -1308,7 +1308,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 			$this->onGround = false;
 		}else{
 			$bb = clone $this->boundingBox;
-			$bb->minY = $this->location->y - 0.2;
+			$bb->minY = $this->location->y - 0.01;
 			$bb->maxY = $this->location->y + 0.2;
 
 			//we're already at the new position at this point; check if there are blocks we might have landed on between

@@ -44,6 +44,10 @@ trait FallableTrait{
 	public function onNearbyBlockChange() : void{
 		$pos = $this->getPosition();
 		$world = $pos->getWorld();
+		// Prevent falling blocks in certain zeqa worlds
+		if(in_array($world->getFolderName(), ["S8_Spawn", "Hub_DiagonAlley_S8"], true)){
+			return;
+		}
 		$down = $world->getBlock($pos->getSide(Facing::DOWN));
 		if($down->canBeReplaced()){
 			$world->setBlock($pos, VanillaBlocks::AIR());

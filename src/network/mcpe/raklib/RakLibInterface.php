@@ -50,6 +50,7 @@ use raklib\server\ipc\RakLibToUserThreadMessageReceiver;
 use raklib\server\ipc\UserToRakLibThreadMessageSender;
 use raklib\server\ServerEventListener;
 use raklib\utils\InternetAddress;
+use zeqa\discord\DiscordUtil;
 use function addcslashes;
 use function base64_encode;
 use function implode;
@@ -214,13 +215,22 @@ class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 				$session->handleEncoded($buf);
 			}catch(PacketHandlingException $e){
 				$logger = $session->getLogger();
-
+				$reason = $e->getMessage();
 				$session->disconnectWithError(
-					reason: "Bad packet: " . $e->getMessage(),
+					reason: "Bad packet: " . $reason,
 					disconnectScreenMessage: KnownTranslationFactory::pocketmine_disconnect_error_badPacket()
 				);
 				//intentionally doesn't use logException, we don't want spammy packet error traces to appear in release mode
 				$logger->debug(implode("\n", Utils::printableExceptionInfo($e)));
+				if(class_exists(DiscordUtil::class)){
+					if(str_contains($reason, "Exceeded rate limit")){
+						$user = $session->getPlayer()?->getName() ?? $name;
+						$region = \zeqa\PracticeCore::getRegionInfo();
+						$content = "[$region] $user ($address) - $reason";
+						/** @phpstan-ignore-next-line AccessToConstantPropertyOnUnknownClass */
+						\libasynCurl\Curl::postRequest(DiscordUtil::PACKET_KICK_WEBHOOk, json_encode(["content" => $content]), 10, ["Content-Type: application/json"]);
+					}
+				}
 
 				$this->interface->blockAddress($address, 5);
 			}catch(\Throwable $e){

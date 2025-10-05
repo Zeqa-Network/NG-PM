@@ -73,6 +73,17 @@ class WorldManager{
 		private WorldProviderManager $providerManager
 	){}
 
+	public function loadCustomWorld(string $name, WritableWorldProvider $provider) : World{
+		$world = new World($this->server, $name, $provider, $this->server->getAsyncPool());
+
+		$this->worlds[$world->getId()] = $world;
+		$world->setAutoSave(false);
+
+		(new WorldLoadEvent($world))->call();
+		return $world;
+	}
+
+
 	public function getProviderManager() : WorldProviderManager{
 		return $this->providerManager;
 	}

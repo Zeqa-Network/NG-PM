@@ -27,6 +27,7 @@ use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\Slab;
 use pocketmine\block\Stair;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wood;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
@@ -114,7 +115,8 @@ final class BlockObjectToStateSerializer implements BlockStateSerializer{
 
 		$locatedSerializer = $this->serializers[$typeId] ?? null;
 		if($locatedSerializer === null){
-			throw new BlockStateSerializeException("No serializer registered for " . get_class($blockState) . " with type ID $typeId");
+			return $this->serializeBlock(VanillaBlocks::AIR());
+			//throw new BlockStateSerializeException("No serializer registered for " . get_class($blockState) . " with type ID $typeId");
 		}
 
 		if($locatedSerializer instanceof BlockStateData){ //static data, not dependent on state

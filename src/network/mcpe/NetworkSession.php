@@ -145,8 +145,8 @@ class NetworkSession{
 	private const INCOMING_GAME_PACKETS_PER_TICK = 2;
 	private const INCOMING_GAME_PACKETS_BUFFER_TICKS = 100;
 
-	private PacketRateLimiter $packetBatchLimiter;
-	private PacketRateLimiter $gamePacketLimiter;
+	public PacketRateLimiter $packetBatchLimiter;
+	public PacketRateLimiter $gamePacketLimiter;
 
 	private \PrefixedLogger $logger;
 	private ?Player $player = null;
@@ -189,6 +189,7 @@ class NetworkSession{
 	private array $ackPromisesByReceiptId = [];
 
 	private ?InventoryManager $invManager = null;
+	private ?int $customTime = null;
 
 	/**
 	 * @var \Closure[]|ObjectSet
@@ -1282,7 +1283,16 @@ class NetworkSession{
 	}
 
 	public function syncWorldTime(int $worldTime) : void{
-		$this->sendDataPacket(SetTimePacket::create($worldTime));
+		$this->sendDataPacket(SetTimePacket::create($this->customTime ?? $worldTime));
+	}
+
+	public function setCustomTime(int $time) : void{
+		$this->syncWorldTime($this->customTime = $time);
+	}
+
+	public function removeCustomTime() : void{
+		$this->customTime = null;
+		$this->syncWorldTime($this->player?->getWorld()->getTime() ?? World::TIME_DAY);
 	}
 
 	public function syncWorldDifficulty(int $worldDifficulty) : void{

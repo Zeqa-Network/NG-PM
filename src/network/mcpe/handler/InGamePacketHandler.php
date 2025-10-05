@@ -489,7 +489,8 @@ class InGamePacketHandler extends PacketHandler{
 					microtime(true) - $this->lastRightClickTime < 0.1 && //100ms
 					$this->lastRightClickData->getPlayerPosition()->distanceSquared($data->getPlayerPosition()) < 0.00001 &&
 					$this->lastRightClickData->getBlockPosition()->equals($data->getBlockPosition()) &&
-					$this->lastRightClickData->getClickPosition()->distanceSquared($clickPos) < 0.00001 //signature spam bug has 0 distance, but allow some error
+					$this->lastRightClickData->getClickPosition()->distanceSquared($clickPos) < 0.00001 && //signature spam bug has 0 distance, but allow some error
+					($this->player->getNetworkSession()->getProtocolId() < ProtocolInfo::PROTOCOL_1_21_20 || $data->getClientInteractPrediction() === PredictedResult::FAILURE)
 				);
 				//get rid of continued spam if the player clicks and holds right-click
 				$this->lastRightClickData = $data;
@@ -498,13 +499,13 @@ class InGamePacketHandler extends PacketHandler{
 					return true;
 				}
 				//TODO: end hack for client spam bug
-
+				$this->checkBlockDesync($data);
 				self::validateFacing($data->getFace());
 
 				$blockPos = $data->getBlockPosition();
 				$vBlockPos = new Vector3($blockPos->getX(), $blockPos->getY(), $blockPos->getZ());
 				$this->player->interactBlock($vBlockPos, $data->getFace(), $clickPos);
-				if($this->player->getNetworkSession()->getProtocolId() < ProtocolInfo::PROTOCOL_1_21_20 || $data->getClientInteractPrediction() === PredictedResult::SUCCESS){
+				if(!$this->player->interactBlock($vBlockPos, $data->getFace(), $clickPos) && !$this->isFailedPrediction($data)){
 					//always sync this in case plugins caused a different result than the client expected
 					//we *could* try to enhance detection of plugin-altered behaviour, but this would require propagating
 					//more information up the stack. For now I think this is good enough.
@@ -525,6 +526,28 @@ class InGamePacketHandler extends PacketHandler{
 		}
 
 		return false;
+	}
+
+	private function isFailedPrediction(UseItemTransactionData $data) : bool {
+		return $this->player->getNetworkSession()->getProtocolId() >= ProtocolInfo::PROTOCOL_1_21_20 && $data->getClientInteractPrediction() === PredictedResult::FAILURE;
+	}
+
+	private function checkBlockDesync(UseItemTransactionData $data) : void {
+		$blockPos = $data->getBlockPosition();
+		$x = $blockPos->getX();
+		$y = $blockPos->getY();
+		$z = $blockPos->getZ();
+		$world = $this->player->getWorld();
+		if ($world->isInWorld($x, $y, $z)) {
+			$chunk = $world->getChunk($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE);
+			if ($chunk !== null) {
+				$block = $this->session->getTypeConverter()->getBlockTranslator()->internalIdToNetworkId($chunk->getBlockStateId($x & Chunk::COORD_MASK, $y, $z & Chunk::COORD_MASK));
+				if ($data->getBlockRuntimeId() !== $block) {
+					$this->session->getLogger()->debug("Syncing block at $x $y $z due to runtime id mismatch");
+					$this->syncBlocksNearby(new Vector3($x, $y, $z), null);
+				}
+			}
+		}
 	}
 
 	/**

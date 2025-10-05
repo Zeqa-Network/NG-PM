@@ -277,7 +277,7 @@ final class EntityFactory{
 		if(isset($this->saveNames[$class])){
 			$saveData->setTag(self::TAG_IDENTIFIER, new StringTag($this->saveNames[$class]));
 		}else{
-			throw new \InvalidArgumentException("Entity $class is not registered");
+			//throw new \InvalidArgumentException("Entity $class is not registered");
 		}
 	}
 
@@ -288,6 +288,7 @@ final class EntityFactory{
 		if(isset($this->saveNames[$class])){
 			return $this->saveNames[$class];
 		}
-		throw new \InvalidArgumentException("Entity $class is not registered");
+		//throw new \InvalidArgumentException("Entity $class is not registered");
+		return "";
 	}
 }

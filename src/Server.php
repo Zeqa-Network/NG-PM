@@ -27,6 +27,7 @@ declare(strict_types=1);
  */
 namespace pocketmine;
 
+use DateTime;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\SimpleCommandMap;
@@ -127,6 +128,7 @@ use pocketmine\world\WorldManager;
 use pocketmine\YmlServerProperties as Yml;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Filesystem\Path;
+use zeqa\discord\DiscordUtil;
 use function array_fill;
 use function array_sum;
 use function base64_encode;
@@ -314,6 +316,9 @@ class Server{
 	private array $packetBroadcasters = [];
 	/** @var array<string, EntityEventBroadcaster> */
 	private array $entityEventBroadcasters = [];
+	/** @var int[] */
+	private array $crashes = [];
+	private float $lastTickTime = 0;
 
 	public function getName() : string{
 		return VersionInfo::NAME;
@@ -595,7 +600,7 @@ class Server{
 				return;
 			}
 
-			/** @see Player::__construct() */
+			/** @see Player::__cons__construct() */
 			$player = new $class($this, $session, $playerInfo, $authenticated, $location, $offlinePlayerData);
 			if(!$player->hasPlayedBefore()){
 				$player->onGround = true; //TODO: this hack is needed for new players in-air ticks - they don't get detected as on-ground until they move
@@ -1657,9 +1662,50 @@ class Server{
 			"thread" => $thread
 		];
 
+
+		// Logging critical server errors and exceptions to discord for Zeqa
+
+		if(class_exists(\zeqa\PracticeCore::class)){
+			$timestamp = new DateTime();
+			$timestamp->setTimezone(new \DateTimeZone("UTC"));
+			$webhookdata = [];
+			/** @phpstan-ignore-next-line */
+			$server = \zeqa\PracticeCore::getRegionInfo();
+			if(str_contains(strtolower($server), "dev")){
+				Server::getInstance()->getLogger()->info("Not logging dev server error to discord");
+				return;
+			}
+			$webhookdata["content"] = "<@893876087497580605> $server had a fatal error";
+			$tracelines = [];
+			$trace = Utils::printableExceptionInfo($e);
+			for($i = 2; $i <= 8; $i++){
+				$tracelines[] = $this->cleanTracePath(($trace[$i]));
+			}
+			$webhookdata['embeds'][] = [
+				'color' => 0xff0000,
+				'timestamp' => $timestamp->format("Y-m-d\TH:i:s.v\Z"),
+				'title' => $e->getMessage() . " in " . $this->cleanTracePath($e->getFile()) . " on L" . $e->getLine(),
+				'description' => "```js\n" . substr(implode("\n", $tracelines), 0, 1990) . "```"
+			];
+			$encoded = json_encode($webhookdata);
+			if($encoded !== false){
+				/** @phpstan-ignore-next-line */
+				Internet::postURL(DiscordUtil::SERVER_CRASH_WEBHOOK, $encoded, 1, ["Content-Type: application/json"]);
+			}
+		}
+
 		global $lastExceptionError, $lastError;
 		$lastExceptionError = $lastError;
 		$this->crashDump();
+	}
+
+	private function cleanTracePath(string $string) : string{
+		return str_replace([
+			"plugins/Practice_v1.0.0/src/",
+			"plugins/Practice.phar/",
+			"plugins/Practice/src/",
+			"pmsrc/"
+		], "", Filesystem::cleanPath($string));
 	}
 
 	private function writeCrashDumpFile(CrashDump $dump) : string{
@@ -1752,20 +1798,6 @@ class Server{
 				$this->logger->critical($this->language->translate(KnownTranslationFactory::pocketmine_crash_error($e->getMessage())));
 			}catch(\Throwable $e){}
 		}
-
-		$this->forceShutdown();
-		$this->isRunning = false;
-
-		//Force minimum uptime to be >= 120 seconds, to reduce the impact of spammy crash loops
-		$uptime = time() - ((int) $this->startTime);
-		$minUptime = 120;
-		$spacing = $minUptime - $uptime;
-		if($spacing > 0){
-			echo "--- Uptime {$uptime}s - waiting {$spacing}s to throttle automatic restart (you can kill the process safely now) ---" . PHP_EOL;
-			sleep($spacing);
-		}
-		@Process::kill(Process::pid());
-		exit(1);
 	}
 
 	/**
@@ -1779,14 +1811,33 @@ class Server{
 		return $this->tickSleeper;
 	}
 
+	public function getLastTickTime() : float{
+		return $this->lastTickTime;
+	}
+
 	private function tickProcessor() : void{
 		$this->nextTick = microtime(true);
 
 		while($this->isRunning){
-			$this->tick();
+			try{
+				$start = hrtime(true);
 
-			//sleeps are self-correcting - if we undersleep 1ms on this tick, we'll sleep an extra ms on the next tick
-			$this->tickSleeper->sleepUntil($this->nextTick);
+				$this->tick();
+				// Measure the time taken for tick in ms
+				$this->lastTickTime = (hrtime(true) - $start) / (10 ** 6);
+
+				//sleeps are self-correcting - if we undersleep 1ms on this tick, we'll sleep an extra ms on the next tick
+				$this->tickSleeper->sleepUntil($this->nextTick);
+			}catch(\Throwable $error){
+				// Shut down server if crash-loop, > 20 errors in 5s
+				$this->crashes[] = time();
+				if(count(array_filter($this->crashes, function ($time){
+						return $time > time() - 5;
+					})) > 20){
+					$this->forceShutdown();
+				}
+				$this->exceptionHandler($error);
+			}
 		}
 	}
 

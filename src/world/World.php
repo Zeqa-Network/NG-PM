@@ -667,7 +667,7 @@ class World implements ChunkManager{
 			}
 		}
 
-		$this->save();
+		// $this->save();
 
 		$this->generatorExecutor->shutdown();
 
@@ -1621,44 +1621,29 @@ class World implements ChunkManager{
 		$collisionInfo = $this->blockStateRegistry->collisionInfo;
 		if($targetFirst){
 			for($z = $minZ; $z <= $maxZ; ++$z){
-				$zOverflow = $z === $minZ || $z === $maxZ;
 				for($x = $minX; $x <= $maxX; ++$x){
-					$zxOverflow = $zOverflow || $x === $minX || $x === $maxX;
 					for($y = $minY; $y <= $maxY; ++$y){
-						$overflow = $zxOverflow || $y === $minY || $y === $maxY;
-
 						$stateCollisionInfo = $this->getBlockCollisionInfo($x, $y, $z, $collisionInfo);
-						if($overflow ?
-							$stateCollisionInfo === RuntimeBlockStateRegistry::COLLISION_MAY_OVERFLOW && $this->getBlockAt($x, $y, $z)->collidesWithBB($bb) :
-							match ($stateCollisionInfo) {
-								RuntimeBlockStateRegistry::COLLISION_CUBE => true,
-								RuntimeBlockStateRegistry::COLLISION_NONE => false,
-								default => $this->getBlockAt($x, $y, $z)->collidesWithBB($bb)
-							}
-						){
+						if(match($stateCollisionInfo){
+							RuntimeBlockStateRegistry::COLLISION_CUBE => $this->checkCubeCollision($x, $y, $z,$bb),
+							RuntimeBlockStateRegistry::COLLISION_NONE => false,
+							default => $this->getBlockAt($x, $y, $z)->collidesWithBB($bb)
+						}){
 							return [$this->getBlockAt($x, $y, $z)];
 						}
 					}
 				}
 			}
 		}else{
-			//TODO: duplicated code :( this way is better for performance though
 			for($z = $minZ; $z <= $maxZ; ++$z){
-				$zOverflow = $z === $minZ || $z === $maxZ;
 				for($x = $minX; $x <= $maxX; ++$x){
-					$zxOverflow = $zOverflow || $x === $minX || $x === $maxX;
 					for($y = $minY; $y <= $maxY; ++$y){
-						$overflow = $zxOverflow || $y === $minY || $y === $maxY;
-
 						$stateCollisionInfo = $this->getBlockCollisionInfo($x, $y, $z, $collisionInfo);
-						if($overflow ?
-							$stateCollisionInfo === RuntimeBlockStateRegistry::COLLISION_MAY_OVERFLOW && $this->getBlockAt($x, $y, $z)->collidesWithBB($bb) :
-							match ($stateCollisionInfo) {
-								RuntimeBlockStateRegistry::COLLISION_CUBE => true,
-								RuntimeBlockStateRegistry::COLLISION_NONE => false,
-								default => $this->getBlockAt($x, $y, $z)->collidesWithBB($bb)
-							}
-						){
+						if(match($stateCollisionInfo){
+							RuntimeBlockStateRegistry::COLLISION_CUBE => $this->checkCubeCollision($x, $y, $z, $bb),
+							RuntimeBlockStateRegistry::COLLISION_NONE => false,
+							default => $this->getBlockAt($x, $y, $z)->collidesWithBB($bb)
+						}){
 							$collides[] = $this->getBlockAt($x, $y, $z);
 						}
 					}
@@ -1667,6 +1652,18 @@ class World implements ChunkManager{
 		}
 
 		return $collides;
+	}
+
+	private function checkCubeCollision(int $x, int $y, int $z, AxisAlignedBB $bb, float $epsilon = 0.0001) : bool {
+		$bMaxX = $x + 1;
+		$bMaxY = $y + 1;
+		$bMaxZ = $z + 1;
+		if($bMaxX - $bb->minX > $epsilon && $bb->maxX - $x > $epsilon){
+			if($bMaxY - $bb->minY > $epsilon && $bb->maxY - $y > $epsilon){
+				return $bMaxZ - $bb->minZ > $epsilon && $bb->maxZ - $z > $epsilon;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -2417,8 +2414,18 @@ class World implements ChunkManager{
 		foreach($tx->getBlocks() as [$x, $y, $z, $block]){
 			$block->position($this, $x, $y, $z);
 			foreach($block->getCollisionBoxes() as $collisionBox){
-				if(count($this->getCollidingEntities($collisionBox)) > 0){
-					return false;  //Entity in block
+				$collisions = 0;
+				$allowed = false;
+				foreach($this->getCollidingEntities($collisionBox) as $collidingEntity){
+					if($collidingEntity instanceof Player && $player instanceof Player){
+						$collisions++;
+						if(!$player->canSee($collidingEntity)){
+							$allowed = true;
+						}
+					}
+				}
+				if($collisions > 0 && !$allowed){
+					return false;
 				}
 			}
 		}
@@ -2528,7 +2535,7 @@ class World implements ChunkManager{
 		for($x = $minX; $x <= $maxX; ++$x){
 			for($z = $minZ; $z <= $maxZ; ++$z){
 				foreach($this->getChunkEntities($x, $z) as $ent){
-					if($ent !== $entity && $ent->boundingBox->intersectsWith($bb)){
+					if($ent !== $entity && $ent->boundingBox->intersectsWith($bb, 0.01)){
 						$nearby[] = $ent;
 					}
 				}
@@ -2883,7 +2890,7 @@ class World implements ChunkManager{
 		if(!EntityFactory::getInstance()->isRegistered($entity::class) && !$entity instanceof NeverSavedWithChunkEntity){
 			//canSaveWithChunk is mutable, so that means it could be toggled after adding the entity and cause a crash
 			//later on. Better we just force all entities to have a save ID, even if it might not be needed.
-			throw new \LogicException("Entity " . $entity::class . " is not registered for a save ID in EntityFactory");
+			// throw new \LogicException("Entity " . $entity::class . " is not registered for a save ID in EntityFactory");
 		}
 		$pos = $entity->getPosition()->asVector3();
 		$this->entitiesByChunk[World::chunkHash($pos->getFloorX() >> Chunk::COORD_BIT_SIZE, $pos->getFloorZ() >> Chunk::COORD_BIT_SIZE)][$entity->getId()] = $entity;
@@ -3232,8 +3239,8 @@ class World implements ChunkManager{
 					$this->provider->saveChunk($x, $z, new ChunkData(
 						$chunk->getSubChunks(),
 						$chunk->isPopulated(),
-						array_map(fn(Entity $e) => $e->saveNBT(), array_values(array_filter($this->getChunkEntities($x, $z), fn(Entity $e) => $e->canSaveWithChunk()))),
-						array_map(fn(Tile $t) => $t->saveNBT(), array_values($chunk->getTiles())),
+						[],
+						[],
 					), $chunk->getTerrainDirtyFlags());
 				}finally{
 					$this->timings->syncChunkSave->stopTiming();
