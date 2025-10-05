@@ -242,7 +242,10 @@ class RakLibInterface implements ServerEventListener, AdvancedNetworkInterface{
 			}catch(\Throwable $e){
 				//record the name of the player who caused the crash, to make it easier to find the reproducing steps
 				$this->server->getLogger()->emergency("Crash occurred while handling a packet from session: $name");
-				throw $e;
+				if(class_exists(DiscordUtil::class)){
+					/** @phpstan-ignore-next-line */
+					DiscordUtil::sendException($e);
+				}
 			}
 		}
 	}

@@ -27,7 +27,6 @@ declare(strict_types=1);
  */
 namespace pocketmine;
 
-use DateTime;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\SimpleCommandMap;
@@ -147,7 +146,6 @@ use function fopen;
 use function get_class;
 use function gettype;
 use function hrtime;
-use function implode;
 use function ini_set;
 use function is_array;
 use function is_dir;
@@ -156,7 +154,6 @@ use function is_object;
 use function is_resource;
 use function is_string;
 use function json_decode;
-use function json_encode;
 use function max;
 use function microtime;
 use function min;
@@ -170,7 +167,6 @@ use function round;
 use function sleep;
 use function spl_object_id;
 use function sprintf;
-use function str_contains;
 use function str_repeat;
 use function str_replace;
 use function stripos;
@@ -178,7 +174,6 @@ use function strlen;
 use function strrpos;
 use function strtolower;
 use function strval;
-use function substr;
 use function time;
 use function touch;
 use function trim;
@@ -1670,47 +1665,14 @@ class Server{
 
 		// Logging critical server errors and exceptions to discord for Zeqa
 
-		if(class_exists(\zeqa\PracticeCore::class)){
-			$timestamp = new DateTime();
-			$timestamp->setTimezone(new \DateTimeZone("UTC"));
-			$webhookdata = [];
+		if(class_exists(DiscordUtil::class)){
 			/** @phpstan-ignore-next-line */
-			$server = \zeqa\PracticeCore::getRegionInfo();
-			if(str_contains(strtolower($server), "dev")){
-				Server::getInstance()->getLogger()->info("Not logging dev server error to discord");
-				return;
-			}
-			$webhookdata["content"] = "<@893876087497580605> $server had a fatal error";
-			$tracelines = [];
-			$trace = Utils::printableExceptionInfo($e);
-			for($i = 2; $i <= 8; $i++){
-				$tracelines[] = $this->cleanTracePath(($trace[$i]));
-			}
-			$webhookdata['embeds'][] = [
-				'color' => 0xff0000,
-				'timestamp' => $timestamp->format("Y-m-d\TH:i:s.v\Z"),
-				'title' => $e->getMessage() . " in " . $this->cleanTracePath($e->getFile()) . " on L" . $e->getLine(),
-				'description' => "```js\n" . substr(implode("\n", $tracelines), 0, 1990) . "```"
-			];
-			$encoded = json_encode($webhookdata);
-			if($encoded !== false){
-				/** @phpstan-ignore-next-line */
-				Internet::postURL(DiscordUtil::SERVER_CRASH_WEBHOOK, $encoded, 1, ["Content-Type: application/json"]);
-			}
+			DiscordUtil::sendException($e);
 		}
 
 		global $lastExceptionError, $lastError;
 		$lastExceptionError = $lastError;
 		$this->crashDump();
-	}
-
-	private function cleanTracePath(string $string) : string{
-		return str_replace([
-			"plugins/Practice_v1.0.0/src/",
-			"plugins/Practice.phar/",
-			"plugins/Practice/src/",
-			"pmsrc/"
-		], "", Filesystem::cleanPath($string));
 	}
 
 	private function writeCrashDumpFile(CrashDump $dump) : string{
