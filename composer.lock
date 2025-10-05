@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f50c480c81aaedd2ff7803ec25bde1a9",
+    "content-hash": "93b576126142d9079ddb59633dfb1796",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -155,13 +155,13 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/NetherGamesMC/BedrockProtocol.git",
-                "reference": "bb3864d0cafd22bd0c983f4aad7d165641dd0e67"
+                "url": "https://github.com/Zeqa-Network/BedrockProtocol.git",
+                "reference": "9721f97635a84bf6414a3a1c614d705ae13b9847"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/bb3864d0cafd22bd0c983f4aad7d165641dd0e67",
-                "reference": "bb3864d0cafd22bd0c983f4aad7d165641dd0e67",
+                "url": "https://api.github.com/repos/Zeqa-Network/BedrockProtocol/zipball/9721f97635a84bf6414a3a1c614d705ae13b9847",
+                "reference": "9721f97635a84bf6414a3a1c614d705ae13b9847",
                 "shasum": ""
             },
             "require": {
@@ -175,6 +175,7 @@
                 "ramsey/uuid": "^4.1"
             },
             "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.88",
                 "phpstan/phpstan": "2.1.0",
                 "phpstan/phpstan-phpunit": "^2.0.0",
                 "phpstan/phpstan-strict-rules": "^2.0.0",
@@ -202,9 +203,9 @@
             ],
             "description": "An implementation of the Minecraft: Bedrock Edition protocol in PHP",
             "support": {
-                "source": "https://github.com/NetherGamesMC/BedrockProtocol/tree/master"
+                "source": "https://github.com/Zeqa-Network/BedrockProtocol/tree/master"
             },
-            "time": "2025-10-03T10:03:10+00:00"
+            "time": "2025-10-05T16:55:47+00:00"
         },
         {
             "name": "netresearch/jsonmapper",

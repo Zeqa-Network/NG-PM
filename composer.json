@@ -102,7 +102,7 @@
    "repositories": [
       {
          "type": "vcs",
-         "url":  "git@github.com:NetherGamesMC/BedrockProtocol.git"
+         "url":  "git@github.com:Zeqa-Network/BedrockProtocol.git"
       },
       {
          "type": "vcs",
