@@ -212,6 +212,7 @@ final class KnownTranslationKeys{
 	public const ENCHANTMENT_UNTOUCHING = "enchantment.untouching";
 	public const ENCHANTMENT_WATERWALKER = "enchantment.waterWalker";
 	public const ENCHANTMENT_WATERWORKER = "enchantment.waterWorker";
+	public const ENCHANTMENT_LUNGE = "enchantment.lunge";
 	public const GAMEMODE_ADVENTURE = "gameMode.adventure";
 	public const GAMEMODE_CHANGED = "gameMode.changed";
 	public const GAMEMODE_CREATIVE = "gameMode.creative";

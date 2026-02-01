@@ -146,6 +146,7 @@ use function strtolower;
  * @method static Pickaxe COPPER_PICKAXE()
  * @method static Shovel COPPER_SHOVEL()
  * @method static Sword COPPER_SWORD()
+ * @method static Spear COPPER_SPEAR()
  * @method static CoralFan CORAL_FAN()
  * @method static HangingSign CRIMSON_HANGING_SIGN()
  * @method static ItemBlockWallOrFloor CRIMSON_SIGN()
@@ -162,6 +163,7 @@ use function strtolower;
  * @method static Pickaxe DIAMOND_PICKAXE()
  * @method static Shovel DIAMOND_SHOVEL()
  * @method static Sword DIAMOND_SWORD()
+ * @method static Spear DIAMOND_SPEAR()
  * @method static Item DISC_FRAGMENT_5()
  * @method static Item DRAGON_BREATH()
  * @method static DriedKelp DRIED_KELP()
@@ -202,6 +204,7 @@ use function strtolower;
  * @method static Pickaxe GOLDEN_PICKAXE()
  * @method static Shovel GOLDEN_SHOVEL()
  * @method static Sword GOLDEN_SWORD()
+ * @method static Spear GOLDEN_SPEAR()
  * @method static Item GOLD_INGOT()
  * @method static Item GOLD_NUGGET()
  * @method static Item GUNPOWDER()
@@ -222,6 +225,7 @@ use function strtolower;
  * @method static Pickaxe IRON_PICKAXE()
  * @method static Shovel IRON_SHOVEL()
  * @method static Sword IRON_SWORD()
+ * @method static Spear IRON_SPEAR()
  * @method static Boat JUNGLE_BOAT()
  * @method static HangingSign JUNGLE_HANGING_SIGN()
  * @method static ItemBlockWallOrFloor JUNGLE_SIGN()
@@ -256,6 +260,7 @@ use function strtolower;
  * @method static Item NETHERITE_SCRAP()
  * @method static Shovel NETHERITE_SHOVEL()
  * @method static Sword NETHERITE_SWORD()
+ * @method static Spear NETHERITE_SPEAR()
  * @method static Item NETHERITE_UPGRADE_SMITHING_TEMPLATE()
  * @method static Item NETHER_BRICK()
  * @method static Item NETHER_QUARTZ()
@@ -341,6 +346,7 @@ use function strtolower;
  * @method static Pickaxe STONE_PICKAXE()
  * @method static Shovel STONE_SHOVEL()
  * @method static Sword STONE_SWORD()
+ * @method static Spear STONE_SPEAR()
  * @method static StringItem STRING()
  * @method static Item SUGAR()
  * @method static SuspiciousStew SUSPICIOUS_STEW()
@@ -365,6 +371,7 @@ use function strtolower;
  * @method static Pickaxe WOODEN_PICKAXE()
  * @method static Shovel WOODEN_SHOVEL()
  * @method static Sword WOODEN_SWORD()
+ * @method static Spear WOODEN_SPEAR()
  * @method static WritableBook WRITABLE_BOOK()
  * @method static WrittenBook WRITTEN_BOOK()
  * @method static SpawnEgg ZOMBIE_SPAWN_EGG()
@@ -696,6 +703,7 @@ final class VanillaItems{
 			self::register($idPrefix . "_pickaxe", fn(IID $id) => new Pickaxe($id, $namePrefix . " Pickaxe", $tier, [EnchantmentTags::PICKAXE]));
 			self::register($idPrefix . "_shovel", fn(IID $id) => new Shovel($id, $namePrefix . " Shovel", $tier, [EnchantmentTags::SHOVEL]));
 			self::register($idPrefix . "_sword", fn(IID $id) => new Sword($id, $namePrefix . " Sword", $tier, [EnchantmentTags::SWORD]));
+			self::register($idPrefix . "_spear", fn(IID $id) => new Spear($id, $namePrefix . " Spear", $tier, [EnchantmentTags::SPEAR]));
 		}
 	}
 

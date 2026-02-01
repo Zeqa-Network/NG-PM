@@ -35,6 +35,7 @@ use pocketmine\inventory\transaction\InventoryTransaction;
 use pocketmine\inventory\transaction\TransactionBuilder;
 use pocketmine\inventory\transaction\TransactionCancelledException;
 use pocketmine\inventory\transaction\TransactionValidationException;
+use pocketmine\item\Spear;
 use pocketmine\item\VanillaItems;
 use pocketmine\item\WritableBook;
 use pocketmine\item\WritableBookPage;
@@ -517,6 +518,19 @@ class InGamePacketHandler extends PacketHandler{
 				}
 				$this->player->useHeldItem();
 				return true;
+			case UseItemTransactionData::ACTION_USE_AS_ATTACK: {
+				$player = $this->player;
+				$inventory = $player->getInventory();
+				$heldItem = $inventory->getItemInHand();
+
+				if (!$heldItem instanceof Spear) {
+					return true;
+				}
+
+				$heldItem->handleJabAttack($player, $player->getMovementSpeed());
+
+				return true;
+			}
 		}
 
 		return false;

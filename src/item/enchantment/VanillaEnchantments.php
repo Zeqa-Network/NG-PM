@@ -56,6 +56,7 @@ use pocketmine\utils\RegistryTrait;
  * @method static Enchantment THORNS()
  * @method static Enchantment UNBREAKING()
  * @method static Enchantment VANISHING()
+ * @method static Enchantment LUNGE()
  */
 final class VanillaEnchantments{
 	use RegistryTrait;
@@ -297,6 +298,16 @@ final class VanillaEnchantments{
 			3,
 			fn(int $level) : int => 10 * $level,
 			5
+		));
+
+		self::register("LUNGE", new Enchantment(
+			KnownTranslationFactory::enchantment_lunge(),
+			Rarity::UNCOMMON,
+			0,
+			0,
+			3,
+			fn(int $level) : int => 6 * ($level - 1) + 3,
+			15
 		));
 	}
 

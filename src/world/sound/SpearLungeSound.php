@@ -21,26 +21,23 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\item;
+namespace pocketmine\world\sound;
 
-/**
- * Tags used by items to determine their cooldown group.
- *
- * These tag values are not related to Minecraft internal IDs.
- * They only share a visual similarity because these are the most obvious values to use.
- * Any arbitrary string can be used.
- *
- * @see Item::getCooldownTag()
- */
-final class ItemCooldownTags{
+use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
+use pocketmine\network\mcpe\protocol\types\LevelSoundEvent;
 
-	private function __construct(){
-		//NOOP
+class SpearLungeSound implements Sound{
+
+	public function __construct(private readonly int $enchantLevel) {
 	}
 
-	public const CHORUS_FRUIT = "chorus_fruit";
-	public const ENDER_PEARL = "ender_pearl";
-	public const SHIELD = "shield";
-	public const GOAT_HORN = "goat_horn";
-	public const SPEAR = "spear";
+	public function encode(Vector3 $pos) : array{
+		$sound = match ($this->enchantLevel) {
+			2 => LevelSoundEvent::ITEM_ENCHANT_LUNGE2,
+			3 => LevelSoundEvent::ITEM_ENCHANT_LUNGE3,
+			default => LevelSoundEvent::ITEM_ENCHANT_LUNGE1,
+		};
+		return [LevelSoundEventPacket::nonActorSound($sound, $pos, false)];
+	}
 }
