@@ -527,8 +527,7 @@ class InGamePacketHandler extends PacketHandler{
 					return true;
 				}
 
-				$heldItem->handleJabAttack($player, $player->getMovementSpeed());
-
+				$heldItem->handleJabAttack($player);
 				return true;
 			}
 		}

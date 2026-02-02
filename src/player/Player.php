@@ -318,6 +318,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 	protected \Logger $logger;
 
 	protected ?SurvivalBlockBreakHandler $blockBreakHandler = null;
+	protected float $currentVelocity = 0.0;
 
 	public function __construct(Server $server, NetworkSession $session, PlayerInfo $playerInfo, bool $authenticated, Location $spawnLocation, ?CompoundTag $namedtag){
 		$username = TextFormat::clean($playerInfo->getUsername());
@@ -1425,6 +1426,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		$exceededRateLimit = $this->moveRateLimit < 0;
 		$this->moveRateLimit = min(self::MOVE_BACKLOG_SIZE, max(0, $this->moveRateLimit) + self::MOVES_PER_TICK * $multiplier);
 		$this->lastMovementProcess = $now;
+		$this->currentVelocity = $this->location->subtractVector($this->lastLocation)->length() / Server::TARGET_SECONDS_PER_TICK;
 
 		$from = clone $this->lastLocation;
 		$to = clone $this->location;
@@ -1569,6 +1571,13 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer, Nev
 		$this->timings->stopTiming();
 
 		return true;
+	}
+
+	/**
+	 * Returns the current velocity the entity is moving at based on movement between ticks.
+	 */
+	public function getCurrentVelocity(): float{
+		return $this->currentVelocity;
 	}
 
 	public function canEat() : bool{

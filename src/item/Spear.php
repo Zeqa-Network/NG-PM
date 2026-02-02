@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\item;
 
 use pocketmine\block\BlockToolType;
+use pocketmine\entity\Entity;
 use pocketmine\entity\Living;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -35,53 +36,53 @@ use pocketmine\world\sound\SpearLungeSound;
 
 class Spear extends TieredTool implements Releasable {
 
-	const MINIMUM_SPEED = 0.13;
-	const MINIMUM_DISTANCE = 2.5;
+	const MINIMUM_VELOCITY = 5.1;
+	const MINIMUM_DISTANCE = 2;
 	const MAXIMUM_DISTANCE = 5;
+	const MAX_HOLD_DURATION = 9;
 
 	public function getBlockToolType(): int {
 		return BlockToolType::SPEAR;
 	}
 
 	public function onUsingTick(Player $player, int $ticksUsed): void {
-		if ($ticksUsed % 4 !== 0 || $ticksUsed <= 7) {
+		if ($ticksUsed / 20 >= self::MAX_HOLD_DURATION) {
+			$player->setUsingItem(false);
 			return;
 		}
-		$this->handleChargeAttack($player);
+		if ($ticksUsed / 20 >= self::getTierActivationDelay()) {
+			$this->handleChargeAttack($player);
+		}
 	}
 
 	private function handleChargeAttack(Player $player): void {
-		$movementSpeed = $player->getMovementSpeed();
+		$currentVelocity = $player->getCurrentVelocity();
 		$direction = $player->getDirectionVector()->normalize()->multiply(1.5);
 		$boundingBox = $player->getBoundingBox()->expandedCopy(1.5, 1.0, 1.5)->offset($direction->x, $direction->y, $direction->z);
-		$baseDamage = $this->getAttackPoints() * 1.5;
 
 		foreach ($player->getWorld()->getNearbyEntities($boundingBox, $player) as $entity) {
 			if (!$entity instanceof Living || !$entity->isAlive() || $entity->getId() === $player->getId()) {
 				continue;
 			}
 			if ($entity instanceof Player) {
-				$toAttacker = $player->getPosition()->subtractVector($entity->getPosition())->normalize();
-				$movementSpeed += max(0, $entity->getMotion()->dot($toAttacker));
+				$currentVelocity += $entity->getCurrentVelocity();
 			}
-			$playerPos = $player->getPosition();
-			$entityPos = $entity->getPosition();
-			if ($playerPos->distance($entityPos) < self::MINIMUM_DISTANCE || $playerPos->distance($entityPos) > self::MAXIMUM_DISTANCE) {
-				return;
+			if ($currentVelocity >= self::MINIMUM_VELOCITY) {
+				$playerPos = $player->getPosition();
+				$entityPos = $entity->getPosition();
+				if ($playerPos->distance($entityPos) < self::MINIMUM_DISTANCE || $playerPos->distance($entityPos) > self::MAXIMUM_DISTANCE) {
+					return;
+				}
+				$this->handleDamage($player, $entity, $this->getChargeDamage($player, $entity));
 			}
-			$this->handleDamage($player, $entity, $baseDamage + ($movementSpeed * 3.0));
 		}
 	}
 
-	public function handleJabAttack(Player $player, float $movementSpeed): void {
+	public function handleJabAttack(Player $player): void {
 		$hasItemCooldown = $player->hasItemCooldown($this);
 		if (!$hasItemCooldown) {
 			$this->handleLunge($player);
 			$player->resetItemCooldown($this, $this->getTierCooldown());
-		} else {
-			return;
-		}
-		if ($movementSpeed > self::MINIMUM_SPEED * 0.5 || $player->isSprinting()) {
 			$eyePos = $player->getEyePos();
 			$facingDirection = $player->getDirectionVector()->normalize();
 
@@ -96,6 +97,7 @@ class Spear extends TieredTool implements Releasable {
 				if (!$nearbyEntity instanceof Living || !$nearbyEntity->isAlive() || $nearbyEntity->getId() === $player->getId()) {
 					continue;
 				}
+
 				$entityBody = $nearbyEntity->getPosition()->add(0, $nearbyEntity->getEyeHeight() / 2, 0);
 				$distanceTo = $eyePos->distance($entityBody);
 				$facingDot = $facingDirection->dot($entityBody->subtractVector($eyePos)->normalize());
@@ -111,62 +113,69 @@ class Spear extends TieredTool implements Releasable {
 			}
 			if ($closestTarget !== null) {
 				$this->handleDamage($player, $closestTarget, $this->getJabDamage());
-			} else {
-				$player->getWorld()->addSound($player->getPosition(), new SpearAttackMissSound($this->getTier()));
+				return;
 			}
-		} else {
 			$player->getWorld()->addSound($player->getPosition(), new SpearAttackMissSound($this->getTier()));
 		}
 	}
 
 	private function handleDamage(Player $player, Living $target, float $damage): void {
-		$event = new EntityDamageByEntityEvent($player, $target, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage + $this->getTierAttackDamage());
-		$target->attack($event);
-		if (!$event->isCancelled()) {
+		$damageEvent = new EntityDamageByEntityEvent($player, $target, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage + $this->getAttackPoints());
+		$target->attack($damageEvent);
+		$this->applyDamage(1);
+
+		if (!$damageEvent->isCancelled()) {
 			$player->getWorld()->addSound($player->getPosition(), new SpearAttackHitSound($this->getTier()));
-			$this->applyDamage(1);
 		}
 	}
 
 	public function handleLunge(Player $player): void {
 		$lungeLevel = $this->getEnchantmentLevel(VanillaEnchantments::LUNGE());
 		if ($lungeLevel > 0) {
-			$dir = $player->getDirectionVector()->multiply(0.8 + ($lungeLevel * 0.4));
-			$player->setMotion($player->getMotion()->addVector($dir));
+			$directionVector = $player->getDirectionVector()->multiply(0.8 + ($lungeLevel * 0.4));
+			$directionVector->y = 0;
+
+			$player->setMotion($player->getMotion()->addVector($directionVector));
 			$player->getWorld()->addSound($player->getPosition(), new SpearLungeSound($lungeLevel));
-			$hunger = $player->getHungerManager();
-			$hunger->setFood(max(0, $hunger->getFood() - $lungeLevel));
+			$player->getHungerManager()->setFood(max(0, $player->getHungerManager()->getFood() - $lungeLevel));
+			$this->applyDamage(2);
 		}
 	}
 
+	public function getChargeDamage(Player $player, Entity $entity): float {
+		$tierMultiplier = match ($this->getTier()) {
+			ToolTier::WOOD, ToolTier::GOLD => 0.7,
+			ToolTier::STONE, ToolTier::COPPER => 0.82,
+			ToolTier::IRON, => 0.95,
+			ToolTier::DIAMOND => 1.075,
+			ToolTier::NETHERITE => 1.2,
+		};
+		$sharpnessEnchant = $this->getEnchantment(VanillaEnchantments::SHARPNESS())?->getLevel() ?? 0;
+		$sharpnessBonus = (($sharpnessEnchant <=> 0) + $sharpnessEnchant) / 2;
+
+		$damageAmount = (1 + $sharpnessBonus + floor(($player->getCurrentVelocity() + 0.01) * $tierMultiplier));
+		if ($entity instanceof Player) {
+			$damageAmount += $entity->getCurrentVelocity();
+		}
+		return $damageAmount;
+	}
+
 	public function getJabDamage(): float {
-		$damage = (float)$this->getAttackPoints();
-
 		$lungeLevel = $this->getEnchantmentLevel(VanillaEnchantments::LUNGE());
-		$damage += $lungeLevel * 1.5;
+		return (float)$this->getAttackPoints() + $lungeLevel * 1.5;
+	}
 
-		return $damage;
+	public function getAttackPoints(): int {
+		return max(2, $this->getTier()->getHarvestLevel());
 	}
 
 	public function getTierCooldown(): int {
-		return match ($this->getTier()) {
-			ToolTier::WOOD => 13,
-			ToolTier::STONE => 15,
-			ToolTier::COPPER => 17,
-			ToolTier::IRON, ToolTier::GOLD => 19,
-			ToolTier::DIAMOND => 21,
-			ToolTier::NETHERITE => 23,
-		};
+		return 11 + ($this->getTier()->getHarvestLevel() * 2);
 	}
 
-	public function getTierAttackDamage(): int {
-		return match ($this->getTier()) {
-			ToolTier::WOOD, ToolTier::GOLD => 2,
-			ToolTier::STONE, ToolTier::COPPER => 3,
-			ToolTier::IRON, => 4,
-			ToolTier::DIAMOND => 5,
-			ToolTier::NETHERITE => 6,
-		};
+	public function getTierActivationDelay(): float {
+		$level = $this->getTier()->getHarvestLevel();
+		return $level <= 4 ? 0.80 - ($level * 0.05) : 0.60 - (($level - 4) * 0.10);
 	}
 
 	public function canStartUsingItem(Player $player): bool {

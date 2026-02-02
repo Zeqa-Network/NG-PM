@@ -34,7 +34,6 @@ class SpearUseSound implements Sound{
 	}
 
 	public function encode(Vector3 $pos) : array{
-		var_dump("sound play");
 		$sound = $this->tier === ToolTier::WOOD ? LevelSoundEvent::ITEM_WOODEN_SPEAR_USE : LevelSoundEvent::ITEM_SPEAR_USE;
 		return [LevelSoundEventPacket::nonActorSound($sound, $pos, false)];
 	}
