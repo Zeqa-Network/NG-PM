@@ -137,7 +137,7 @@ class Spear extends TieredTool implements Releasable {
 
 			$player->setMotion($player->getMotion()->addVector($directionVector));
 			$player->getWorld()->addSound($player->getPosition(), new SpearLungeSound($lungeLevel));
-			$player->getHungerManager()->setFood(max(0, $player->getHungerManager()->getFood() - $lungeLevel));
+			$player->getHungerManager()->exhaust(max(10, $player->getHungerManager()->getFood() - $lungeLevel));
 			$this->applyDamage(2);
 		}
 	}
