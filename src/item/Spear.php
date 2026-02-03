@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\item;
 
 use pocketmine\block\BlockToolType;
+use pocketmine\block\Liquid;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Living;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
@@ -36,27 +37,55 @@ use pocketmine\world\sound\SpearLungeSound;
 
 class Spear extends TieredTool implements Releasable {
 
-	const MINIMUM_VELOCITY = 5.1;
+	const MINIMUM_VELOCITY_DAMAGE = 4.6;
+	const MINIMUM_VELOCITY_KNOCKBACK = 5.1;
 	const MINIMUM_DISTANCE = 2;
 	const MAXIMUM_DISTANCE = 5;
 	const MAX_HOLD_DURATION = 9;
+	const MINIMUM_FOOD = 6;
+
+	const STAGE_NONE = 0;
+	const STAGE_ENGAGED = 1;
+	const STAGE_TIRED = 2;
+	const STAGE_DISENGAGED = 3;
+
+	const STAGE_TIRED_DELAY = 3;
+	const STAGE_DISENGAGED_DELAY = 4;
+
+	protected int $stage;
+
+	public function __construct(ItemIdentifier $identifier, string $name, ToolTier $tier, array $enchantmentTags = []) {
+		$this->stage = self::STAGE_NONE;
+		parent::__construct($identifier, $name, $tier, $enchantmentTags);
+	}
 
 	public function getBlockToolType(): int {
 		return BlockToolType::SPEAR;
 	}
 
 	public function onUsingTick(Player $player, int $ticksUsed): void {
-		if ($ticksUsed / 20 >= self::MAX_HOLD_DURATION) {
+		$secondsUsed = ($ticksUsed / 20);
+		$activationDelay = self::getTierActivationDelay();
+
+		if ($secondsUsed >= self::MAX_HOLD_DURATION) {
+			$this->stage = self::STAGE_NONE;
 			$player->setUsingItem(false);
 			return;
 		}
-		if ($ticksUsed / 20 >= self::getTierActivationDelay()) {
+		if ($secondsUsed >= self::STAGE_DISENGAGED_DELAY) {
+			$this->stage = self::STAGE_DISENGAGED;
+		} elseif ($secondsUsed >= self::STAGE_TIRED_DELAY) {
+			$this->stage = self::STAGE_TIRED;
+		} elseif ($secondsUsed >= $activationDelay) {
+			$this->stage = self::STAGE_ENGAGED;
+		}
+
+		if ($this->stage >= self::STAGE_ENGAGED) {
 			$this->handleChargeAttack($player);
 		}
 	}
 
 	private function handleChargeAttack(Player $player): void {
-		$currentVelocity = $player->getCurrentVelocity();
 		$direction = $player->getDirectionVector()->normalize()->multiply(1.5);
 		$boundingBox = $player->getBoundingBox()->expandedCopy(1.5, 1.0, 1.5)->offset($direction->x, $direction->y, $direction->z);
 
@@ -64,14 +93,12 @@ class Spear extends TieredTool implements Releasable {
 			if (!$entity instanceof Living || !$entity->isAlive() || $entity->getId() === $player->getId()) {
 				continue;
 			}
-			if ($entity instanceof Player) {
-				$currentVelocity += $entity->getCurrentVelocity();
-			}
-			if ($currentVelocity >= self::MINIMUM_VELOCITY) {
-				$playerPos = $player->getPosition();
-				$entityPos = $entity->getPosition();
-				if ($playerPos->distance($entityPos) < self::MINIMUM_DISTANCE || $playerPos->distance($entityPos) > self::MAXIMUM_DISTANCE) {
-					return;
+			$relativeVelocity = abs($player->getCurrentVelocity() - ($entity instanceof Player ? $entity->getCurrentVelocity() : 0.0));
+
+			if ($relativeVelocity >= self::MINIMUM_VELOCITY_DAMAGE) {
+				$distance = $player->getPosition()->distance($entity->getPosition());
+				if ($distance < self::MINIMUM_DISTANCE || $distance > self::MAXIMUM_DISTANCE) {
+					continue;
 				}
 				$this->handleDamage($player, $entity, $this->getChargeDamage($player, $entity));
 			}
@@ -120,7 +147,11 @@ class Spear extends TieredTool implements Releasable {
 	}
 
 	private function handleDamage(Player $player, Living $target, float $damage): void {
+		$noKnockback = $this->stage === self::STAGE_DISENGAGED || ($player->isUsingItem() && $player->getCurrentVelocity() < self::MINIMUM_VELOCITY_KNOCKBACK);
 		$damageEvent = new EntityDamageByEntityEvent($player, $target, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage + $this->getAttackPoints());
+		if($noKnockback) {
+			$damageEvent->setKnockBack(0);
+		}
 		$target->attack($damageEvent);
 		$this->applyDamage(1);
 
@@ -130,34 +161,59 @@ class Spear extends TieredTool implements Releasable {
 	}
 
 	public function handleLunge(Player $player): void {
-		$lungeLevel = $this->getEnchantmentLevel(VanillaEnchantments::LUNGE());
-		if ($lungeLevel > 0) {
+		if ($this->canLunge($player)) {
+			$lungeLevel = $this->getEnchantmentLevel(VanillaEnchantments::LUNGE());
 			$directionVector = $player->getDirectionVector()->multiply(0.8 + ($lungeLevel * 0.4));
 			$directionVector->y = 0;
 
 			$player->setMotion($player->getMotion()->addVector($directionVector));
 			$player->getWorld()->addSound($player->getPosition(), new SpearLungeSound($lungeLevel));
-			$player->getHungerManager()->exhaust(max(10, $player->getHungerManager()->getFood() - $lungeLevel));
-			$this->applyDamage(2);
+			$player->getHungerManager()->exhaust($lungeLevel + 2);
+
+			$newItem = clone $this;
+			$newItem->applyDamage(1);
+			$player->getInventory()->setItemInHand($newItem);
 		}
+	}
+
+	public function canLunge(Player $player): bool {
+		$playerPos = $player->getPosition();
+		$blockAtPos = $player->getWorld()->getBlockAt($playerPos->getFloorX(), $playerPos->getFloorY(), $playerPos->getFloorZ());
+
+		if ($this->getEnchantmentLevel(VanillaEnchantments::LUNGE()) <= 0) {
+			return false;
+		}
+		if ($player->isGliding() || $player->isSwimming()) {
+			return false;
+		}
+		if ($blockAtPos instanceof Liquid || $player->isUnderwater()) {
+			return false;
+		}
+		if (!$player->isCreative() && $player->getHungerManager()->getFood() < self::MINIMUM_FOOD) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public function getChargeDamage(Player $player, Entity $entity): float {
 		$tierMultiplier = match ($this->getTier()) {
 			ToolTier::WOOD, ToolTier::GOLD => 0.7,
 			ToolTier::STONE, ToolTier::COPPER => 0.82,
-			ToolTier::IRON, => 0.95,
+			ToolTier::IRON => 0.95,
 			ToolTier::DIAMOND => 1.075,
 			ToolTier::NETHERITE => 1.2,
 		};
+
 		$sharpnessEnchant = $this->getEnchantment(VanillaEnchantments::SHARPNESS())?->getLevel() ?? 0;
 		$sharpnessBonus = (($sharpnessEnchant <=> 0) + $sharpnessEnchant) / 2;
 
-		$damageAmount = (1 + $sharpnessBonus + floor(($player->getCurrentVelocity() + 0.01) * $tierMultiplier));
-		if ($entity instanceof Player) {
-			$damageAmount += $entity->getCurrentVelocity();
-		}
-		return $damageAmount;
+		$playerSpeed = $player->getCurrentVelocity();
+		$entitySpeed = $entity instanceof Player ? $entity->getCurrentVelocity() : 0.0;
+
+		$relativeSpeed = abs($playerSpeed - $entitySpeed);
+
+		return ($relativeSpeed * $tierMultiplier) + $sharpnessBonus;
 	}
 
 	public function getJabDamage(): float {
