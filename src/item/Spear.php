@@ -147,17 +147,23 @@ class Spear extends TieredTool implements Releasable {
 	}
 
 	private function handleDamage(Player $player, Living $target, float $damage): void {
-		$noKnockback = $this->stage === self::STAGE_DISENGAGED || ($player->isUsingItem() && $player->getCurrentVelocity() < self::MINIMUM_VELOCITY_KNOCKBACK);
-		$damageEvent = new EntityDamageByEntityEvent($player, $target, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage + $this->getAttackPoints());
-		if($noKnockback) {
-			$damageEvent->setKnockBack(0);
-		}
-		$target->attack($damageEvent);
-		$this->applyDamage(1);
-
-		if (!$damageEvent->isCancelled()) {
-			$player->getWorld()->addSound($player->getPosition(), new SpearAttackHitSound($this->getTier()));
-		}
+	    $noKnockback = $this->stage === self::STAGE_DISENGAGED || ($player->isUsingItem() && $player->getCurrentVelocity() < self::MINIMUM_VELOCITY_KNOCKBACK);
+	    $damageEvent = new EntityDamageByEntityEvent($player, $target, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage + $this->getAttackPoints());
+	    if($noKnockback) {
+	        $damageEvent->setKnockBack(0);
+	    }
+	    $target->attack($damageEvent);
+	    
+	    // FIX: Re-enforce knockback after event handlers run
+	    if($noKnockback && !$damageEvent->isCancelled()) {
+	        $damageEvent->setKnockBack(0);
+	    }
+	    
+	    $this->applyDamage(1);
+	
+	    if (!$damageEvent->isCancelled()) {
+	        $player->getWorld()->addSound($player->getPosition(), new SpearAttackHitSound($this->getTier()));
+	    }
 	}
 
 	public function handleLunge(Player $player): void {
